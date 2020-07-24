@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "declaration": false,
+    "sourceMap": false,
+    "declarationMap": false,
+  },
+}

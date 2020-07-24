@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "CommonJS",
+    "target": "ES6",
+    "jsx": "react",
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true,
+  },
+  "exclude" : [
+    "./dist"
+  ]
+}
