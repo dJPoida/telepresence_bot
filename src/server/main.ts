@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 
 import { env } from './env';
+import { applyExpressMiddleware } from './http/apply-express-middleware';
 
 async function run() {
     // Express app
@@ -15,10 +16,12 @@ async function run() {
         expressApp(req, res);
       });
   
+    // Apply the routing and middleware to the express app
+    applyExpressMiddleware(expressApp);
 
     // Server running
     console.log('Server Running...');
-    httpServer.listen(env.PORT, () => console.info(`Http server running on port ${env.PORT}`));
+    httpServer.listen(env.DEFAULT_PORT, () => console.info(`Http server running on port ${env.DEFAULT_PORT}`));
 }
 
 run();

@@ -2,6 +2,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+function envBool(name: string) {
+  const input = process.env[name];
+  if (input === 'true') return true;
+  if (input === 'false') return false;
+  throw new TypeError(`Unable to parse env variable "${name}" as boolean`);
+}
+
 function envNum(name: string) {
   const input = process.env[name];
   const num = Number(input);
@@ -22,7 +29,8 @@ export const env = {
   NODE_ENV: envString('NODE_ENV'),
   IS_PRODUCTION,
   IS_DEVELOPMENT,
-  PORT: envNum('PORT'),
+  USE_WEBPACK: envBool('USE_WEBPACK'),
+  DEFAULT_PORT: envNum('DEFAULT_PORT'),
 } as const;
 
 export type env = typeof env;

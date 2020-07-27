@@ -1,12 +1,21 @@
 import express from 'express';
-import SendFileFn from 
+import { access, constants, promises as fs } from 'fs';
+import { lookup } from 'mime-types';
+import { SendFileFn } from '../types/send-file-fn.type';
+import { WriteFileFn } from '../types/write-file-fn.type';
+import { ExistsFn } from '../types/exists-fn.type';
+import { ServeStaticMiddlewareFactoryFn } from '../types/serve-static-middleware-factory-fn.type';
+import { env } from 'process';
+import { dirname, join, resolve } from 'path';
+import { Middleware } from '../types/middleware.type';
+import { catchMiddleware } from '../helpers/catch-middleware.helper';
+import { applyWebpackDevelopmentMiddleware } from './apply-webpack-development.middleware';
 
 export function configureEnvironment(expressApp: express.Express): {
     sendFile: SendFileFn,
     writeFile: WriteFileFn,
     exists: ExistsFn,
     serveStaticMiddlewareFactory: ServeStaticMiddlewareFactoryFn,
-    requiresAuthMiddlewareFactory: RequiresAuthMiddlewareFactoryFn,
   } {
     // Build and serve the client using webPack in development mode
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
@@ -73,11 +82,10 @@ export function configureEnvironment(expressApp: express.Express): {
      */
     const serveStaticMiddlewareFactory: ServeStaticMiddlewareFactoryFn = function serveStaticMiddleware(staticPath: string): Middleware {
       const doServeStatic: Middleware = catchMiddleware(async function doServeStatic(req, res, next) {
-        const realPath = resolve(__dirname, '../../../../../dist/client', join(staticPath, req.path));
+        const realPath = resolve(__dirname, '../../../../dist/client', join(staticPath, req.path));
         try {
           const fileExists = await exists(realPath);
           if (fileExists) {
-            req.shouldLog = false;
             sendFile(res, realPath, lookup(realPath) || undefined);
           } else {
             next();
@@ -90,14 +98,11 @@ export function configureEnvironment(expressApp: express.Express): {
   
       return doServeStatic;
     };
-  
-    const requiresAuthMiddlewareFactory = createRequiresAuthMiddlewareFactory(sendFile);
-  
+    
     return {
       sendFile,
       writeFile,
       exists,
       serveStaticMiddlewareFactory,
-      requiresAuthMiddlewareFactory,
     };
   }
