@@ -1,44 +1,53 @@
-const merge = require('webpack-merge');
-const path = require('path');
+/* eslint-disable node/no-unpublished-require */
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-var-requires */
+const wpMerge = require('webpack-merge');
 
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const packageJson = require('./package.json');
+const entryPoints = require('./webpack.entrypoints');
 const baseConfig = require('./webpack.config.base');
-const appVersionSuffix = packageJson.version.replace(/\./g, '-');
 
-module.exports = merge.merge(baseConfig, {
+const clientSourcePath = path.resolve(__dirname, 'src/client');
+const clientDistPath = path.resolve(__dirname, 'dist/client');
+const tsConfigPath = path.resolve(__dirname, 'tsconfig.client.dev.json');
+
+const hotMiddlewareScript = 'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=1000&reload=true';
+
+const entry = (() => {
+  const result = {};
+
+  entryPoints.forEach((entryPoint) => {
+    result[entryPoint.name] = [
+      path.resolve(clientSourcePath, `${entryPoint.name}.tsx`),
+      hotMiddlewareScript,
+    ];
+  });
+  return result;
+})();
+
+module.exports = wpMerge.merge(baseConfig, {
   mode: 'development',
-  
-  // Enable sourcemaps for debugging webpack output.
-  devtool: 'source-map',
-  
+  devtool: 'inline-source-map',
+  entry,
   module: {
     rules: [
-      // TS and TSX files
       {
         test: /\.ts(x?)$/,
         exclude: /node_modules/,
-        use: [
-          {
-            loader: 'ts-loader',
-            options: {
-              configFile: path.resolve(__dirname, 'tsconfig.dev.json'),
-            },
-          }
-        ]
+        loader: 'ts-loader',
+        options: {
+          configFile: tsConfigPath,
+        },
       },
-
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       {
         enforce: 'pre',
         test: /\.js$/,
-        loader: 'source-map-loader'
+        loader: 'source-map-loader',
       },
-
-      // Compile SCSS to CSS using the MiniCSS Extract Plugin and Hot Loader when in development mode
       {
         test: /\.(scss|css)$/,
         use: [
@@ -60,52 +69,9 @@ module.exports = merge.merge(baseConfig, {
           },
         ],
       },
-    ]
+    ],
   },
-
   plugins: [
-    // Copy the react source files to the dist directory
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, 'node_modules/react/umd', 'react.development.js'),
-          to: 'js',
-          toType: 'dir',
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/react-dom/umd', 'react-dom.development.js'),
-          to: 'js',
-          toType: 'dir',
-        },
-      ],
-    }),
-
-    // Use HTML Webpack Plugin to copy and populate our html templates
-    new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, 'src', `index.html`),
-      filename: `index.html`,
-      chunks: ['index'],
-      hash: true,
-      templateParameters: {
-        appTitle: 'Telepresence Bot',
-        appVersionSuffix,
-        jsSuffix: 'development'
-      },
-    }),
-
-    // Extract the compiled CSS for each entry point into an external file
-    // This makes de-bugging and development easier
-    new MiniCssExtractPlugin({
-      filename: 'css/[name].css',
-    }),
+    new webpack.HotModuleReplacementPlugin(),
   ],
-
-  // When running the application in development mode using "yarn dev",
-  // the application will be served on localhost using the following config
-  devServer: {
-    contentBase: path.join(__dirname, 'dist'),
-    compress: true,
-    writeToDisk: true,
-    port: 80
-  }
 });

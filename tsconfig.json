@@ -1,19 +1,13 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "noImplicitAny": true,
-    "preserveConstEnums": true,
-    "removeComments": true,
-    "allowSyntheticDefaultImports": true,
-    "module": "CommonJS",
-    "target": "ES6",
+    "target": "ES2019",
+    "module": "commonjs",
+    "lib": ["es2019", "dom"],
     "jsx": "react",
-    "moduleResolution": "node",
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
   },
-  "exclude" : [
-    "./dist"
-  ]
 }

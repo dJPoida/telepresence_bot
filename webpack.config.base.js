@@ -1,39 +1,74 @@
+/* eslint-disable node/no-unpublished-require */
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
 
-module.exports = {
-  mode: 'none',
-  
-  entry: {
-    index: [
-      path.resolve(__dirname, 'src', `index.ts`),
-    ],
-  },
+const entryPoints = require('./webpack.entrypoints');
 
+const appVersionSuffix = packageJson.version.replace(/\./g, '-');
+const clientSourcePath = path.resolve(__dirname, 'src/client');
+const clientDistPath = path.resolve(__dirname, 'dist/client');
+
+module.exports = {
+  output: {
+    path: clientDistPath,
+    publicPath: '/',
+    filename: 'js/[name].dist.js',
+  },
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
-    extensions: ['.ts', '.tsx', '.js']
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
-  
   plugins: [
     // Provide some global variables to the client
     new webpack.DefinePlugin({
-      // Let's give our front end application the ability to render the version number
+      // Put: 'client side variables here'
       __VERSION__: JSON.stringify(packageJson.version),
     }),
 
-    // Copy public assets to our dist folder
+    new CleanWebpackPlugin(),
+
+    // Use HTML Webpack Plugin to copy and populate our html templates
+    ...entryPoints.map((entryPoint) => new HtmlWebpackPlugin({
+      template: path.resolve(clientSourcePath, `${entryPoint.template}.html`),
+      filename: path.resolve(clientDistPath, `${entryPoint.name}.html`),
+      chunks: [entryPoint.name],
+      hash: true,
+      templateParameters: {
+        appVersionSuffix,
+      },
+    })),
+
+    // Extract the compiled CSS for each entry point into an external file
+    new MiniCssExtractPlugin({
+      filename: 'css/[name].css',
+    }),
+
+    // Copy other static assets to our dist folder
     new CopyWebpackPlugin({
-      patterns:[
+      patterns: [
         {
-          from: path.join(__dirname, './src', 'public'),
-          to: path.join(__dirname, './dist'),
+          from: path.join(clientSourcePath, 'public'),
+          to: path.join(clientDistPath, 'public'),
           toType: 'dir',
-        }
-      ]
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/react/umd', 'react.development.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/react-dom/umd', 'react-dom.development.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+      ],
     }),
   ],
 
