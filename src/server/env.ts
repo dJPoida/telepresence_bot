@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { resolve } from 'path';
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ export const env = {
   IS_DEVELOPMENT,
   USE_WEBPACK: envBool('USE_WEBPACK'),
   DEFAULT_PORT: envNum('DEFAULT_PORT'),
+  SOURCE_PATH: resolve(__dirname, '../../src'),
+  DIST_PATH: resolve(__dirname, '../../dist'),
 } as const;
 
 export type env = typeof env;

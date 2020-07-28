@@ -3,10 +3,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const wpMerge = require('webpack-merge');
 const path = require('path');
-
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const packageJson = require('./package.json');
 const baseConfig = require('./webpack.config.base');
 const entryPoints = require('./webpack.entrypoints');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
+const appVersionSuffix = packageJson.version.replace(/\./g, '-');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 
@@ -55,6 +60,19 @@ module.exports = wpMerge.merge(baseConfig, {
     ],
   },
   plugins: [
+    // Use HTML Webpack Plugin to copy and populate our html templates
+    ...entryPoints.map((entryPoint) => new HtmlWebpackPlugin({
+      template: path.resolve(clientSourcePath, `${entryPoint.template}.html`),
+      filename: path.resolve(clientDistPath, `${entryPoint.name}.html`),
+      chunks: [entryPoint.name],
+      hash: true,
+      templateParameters: {
+        appTitle: 'Telepresence Bot',
+        appVersionSuffix,
+        jsSuffix: 'production.min'
+      },
+    })),
+        
     // Clean the dist directory before performing a production build
     new CleanWebpackPlugin(),
   ]

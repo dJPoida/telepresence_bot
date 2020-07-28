@@ -3,15 +3,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
 
-const entryPoints = require('./webpack.entrypoints');
-
-const appVersionSuffix = packageJson.version.replace(/\./g, '-');
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
 
@@ -33,17 +29,6 @@ module.exports = {
     }),
 
     new CleanWebpackPlugin(),
-
-    // Use HTML Webpack Plugin to copy and populate our html templates
-    ...entryPoints.map((entryPoint) => new HtmlWebpackPlugin({
-      template: path.resolve(clientSourcePath, `${entryPoint.template}.html`),
-      filename: path.resolve(clientDistPath, `${entryPoint.name}.html`),
-      chunks: [entryPoint.name],
-      hash: true,
-      templateParameters: {
-        appVersionSuffix,
-      },
-    })),
 
     // Extract the compiled CSS for each entry point into an external file
     new MiniCssExtractPlugin({

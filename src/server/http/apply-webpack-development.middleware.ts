@@ -2,6 +2,7 @@
 import express from 'express';
 import { resolve, join } from 'path';
 import { wait } from '../../shared/helpers/wait.helper';
+import { env } from '../env';
 
 /**
  * @description
@@ -21,14 +22,14 @@ export function applyWebpackDevelopmentMiddleware(
   const webpackDevMiddleware = require('webpack-dev-middleware');
 
   // eslint-disable-next-line import/no-extraneous-dependencies, import/no-dynamic-require, node/no-unpublished-require, global-require, @typescript-eslint/no-var-requires
-  const webpackConfig = require(resolve(__dirname, '../../../../../webpack.config.dev'));
+  const webpackConfig = require(resolve(__dirname, env.SOURCE_PATH, '../webpack.config.dev'));
 
   const compiler = webpack(webpackConfig);
 
   // Attach the WebpackDevMiddleware to the express server
   expressApp.use(webpackDevMiddleware(compiler, {
     contentBase: [
-      resolve(__dirname, '../../../../dist/client/public'),
+      resolve(__dirname, env.DIST_PATH, 'client/public'),
     ],
     host: process.env.HOST,
     port: process.env.DEV_CLIENT_PORT,

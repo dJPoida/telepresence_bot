@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 
 import { env } from './env';
+import * as REMEMBER_OVERRIDES from '../shared/types/overrides.type';
 import { applyExpressMiddleware } from './http/apply-express-middleware';
 
 async function run() {

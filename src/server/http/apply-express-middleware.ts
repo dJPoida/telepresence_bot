@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import { configureEnvironment } from './configure-environment';
 import { fourZeroFourMiddleware } from './four-zero-four.middleware';
 import { errorHandlerMiddleware } from './error-handler.middleware';
+import { env } from '../env';
 
 /**
  * @description
@@ -11,31 +12,31 @@ import { errorHandlerMiddleware } from './error-handler.middleware';
  */
 export function applyExpressMiddleware(
     expressApp: express.Express,
-  ) {
+  ): express.Express {
     expressApp.use(express.json());
     expressApp.use(express.urlencoded({ extended: false }));
   
-    const { sendFile, writeFile, exists, serveStaticMiddlewareFactory } = configureEnvironment(expressApp);
+    const { sendFile, exists, serveStaticMiddlewareFactory } = configureEnvironment(expressApp);
   
     // Serve the client static assets
     expressApp.use('/js/:filename', (req, res, next) => {
       const { filename } = req.params;
-      sendFile(res, resolve(__dirname, `../../../dist/client/js/${filename}`));
+      sendFile(res, resolve(__dirname, env.DIST_PATH, `client/js/${filename}`));
     });
   
     // Serve the client index
     expressApp.get('/', (req, res) => {
-        sendFile(res, resolve(__dirname, '../../../dist/client/index.html'));
+        sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/index.html'));
     });
 
     // Serve the client display
     expressApp.get('/display', (req, res) => {
-        sendFile(res, resolve(__dirname, '../../../dist/client/display.html'));
+        sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/display.html'));
     });
   
     // Serve the client config
     expressApp.get('/config', (req, res) => {
-        sendFile(res, resolve(__dirname, '../../../dist/client/config.html'));
+        sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/config.html'));
     });
     
     // Custom static assets sender (because dev middleware and express.static don't play well together)
