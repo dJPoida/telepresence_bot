@@ -1,0 +1,11 @@
+$orange: #FF6D00;
+$white: #F0F0F0;
+
+$primary-color: $orange;
+$background-color: #000;
+
+@import './fonts/telepresence-bot-icons';
+
+body {
+    background-color: $background-color;
+}

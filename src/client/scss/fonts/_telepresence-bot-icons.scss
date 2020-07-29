@@ -1,0 +1,189 @@
+$font-version: 1.0;
+
+@font-face {
+    font-family: 'telepresence-bot-icons';
+    src:  url('/fonts/telepresence-bot-icons/telepresence-bot.eot?#{$font-version}');
+    src:  url('/fonts/telepresence-bot-icons/telepresence-bot.eot?#{$font-version}#iefix') format('embedded-opentype'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot.ttf?#{$font-version}') format('truetype'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot.woff?#{$font-version}') format('woff'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot.svg?#{$font-version}#telepresence-bot-icons') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
+  
+  [class^="tpb-icon-"], [class*=" tpb-icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'telepresence-bot-icons' !important;
+    speak: never;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+  
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .tpb-icon-telepresence-bot:before {
+    content: "\e900";
+  }
+  .tpb-icon-menu-hamburger:before {
+    content: "\e901";
+  }
+  .tpb-icon-settings:before {
+    content: "\e902";
+  }
+  .tpb-icon-menu-horizontal:before {
+    content: "\e903";
+  }
+  .tpb-icon-menu-vertical:before {
+    content: "\e904";
+  }
+  .tpb-icon-check-circle:before {
+    content: "\e905";
+  }
+  .tpb-icon-cross-circle:before {
+    content: "\e906";
+  }
+  .tpb-icon-add-circle:before {
+    content: "\e907";
+  }
+  .tpb-icon-minus-circle:before {
+    content: "\e908";
+  }
+  .tpb-icon-warning:before {
+    content: "\e909";
+  }
+  .tpb-icon-help-circle:before {
+    content: "\e90a";
+  }
+  .tpb-icon-info-circle:before {
+    content: "\e90b";
+  }
+  .tpb-icon-danger:before {
+    content: "\e90c";
+  }
+  .tpb-icon-checkbox:before {
+    content: "\e90d";
+  }
+  .tpb-icon-checkbox-checked:before {
+    content: "\e90e";
+  }
+  .tpb-icon-radio-button:before {
+    content: "\e90f";
+  }
+  .tpb-icon-radio-button-checked:before {
+    content: "\e910";
+  }
+  .tpb-icon-edit:before {
+    content: "\e911";
+  }
+  .tpb-icon-check:before {
+    content: "\e912";
+  }
+  .tpb-icon-cross:before {
+    content: "\e913";
+  }
+  .tpb-icon-block:before {
+    content: "\e914";
+  }
+  .tpb-icon-refresh:before {
+    content: "\e915";
+  }
+  .tpb-icon-fullscreen:before {
+    content: "\e916";
+  }
+  .tpb-icon-fullscreen-exit:before {
+    content: "\e917";
+  }
+  .tpb-icon-wifi:before {
+    content: "\e918";
+  }
+  .tpb-icon-wifi-off:before {
+    content: "\e919";
+  }
+  .tpb-icon-mic:before {
+    content: "\e91a";
+  }
+  .tpb-icon-mic-off:before {
+    content: "\e91b";
+  }
+  .tpb-icon-videocam:before {
+    content: "\e91c";
+  }
+  .tpb-icon-videocam-off:before {
+    content: "\e91d";
+  }
+  .tpb-icon-volume-mute:before {
+    content: "\e91e";
+  }
+  .tpb-icon-volume-down:before {
+    content: "\e91f";
+  }
+  .tpb-icon-volume-up:before {
+    content: "\e920";
+  }
+  .tpb-icon-volume-off:before {
+    content: "\e921";
+  }
+  .tpb-icon-bell:before {
+    content: "\e922";
+  }
+  .tpb-icon-bell-off:before {
+    content: "\e923";
+  }
+  .tpb-icon-bell-ringing:before {
+    content: "\e924";
+  }
+  .tpb-icon-call:before {
+    content: "\e925";
+  }
+  .tpb-icon-phone-talk:before {
+    content: "\e926";
+  }
+  .tpb-icon-call-end:before {
+    content: "\e927";
+  }
+  .tpb-icon-control-camera:before {
+    content: "\e928";
+  }
+  .tpb-icon-gamepad:before {
+    content: "\e929";
+  }
+  .tpb-icon-camera-flip:before {
+    content: "\e92a";
+  }
+  .tpb-icon-chat:before {
+    content: "\e92b";
+  }
+  .tpb-icon-arrow-left:before {
+    content: "\e92c";
+  }
+  .tpb-icon-arrow-right:before {
+    content: "\e92d";
+  }
+  .tpb-icon-arrow-up:before {
+    content: "\e92e";
+  }
+  .tpb-icon-arrow-down:before {
+    content: "\e92f";
+  }
+  .tpb-icon-rotate-left:before {
+    content: "\e930";
+  }
+  .tpb-icon-rotate-right:before {
+    content: "\e931";
+  }
+  .tpb-icon-360:before {
+    content: "\e932";
+  }
+  .tpb-icon-chevron-up:before {
+    content: "\e933";
+  }
+  .tpb-icon-chevron-down:before {
+    content: "\e934";
+  }
+  
