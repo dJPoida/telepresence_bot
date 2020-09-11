@@ -1,28 +1,18 @@
 import express from 'express';
 import http from 'http';
-
-import { env } from './env';
+import { Kernel } from './lib/kernel';
 import * as REMEMBER_OVERRIDES from '../shared/types/overrides.type';
-import { applyExpressMiddleware } from './http/apply-express-middleware';
 
-async function run() {
-    // Express app
-    const expressApp = express();
-    
-    // http server
-    const httpServer = http.createServer(function handleConnection(
-        req: http.IncomingMessage,
-        res: http.ServerResponse,
-      ) {
-        expressApp(req, res);
-      });
-  
-    // Apply the routing and middleware to the express app
-    applyExpressMiddleware(expressApp);
+// Express app
+const expressApp = express();
 
-    // Server running
-    console.log('Server Running...');
-    httpServer.listen(env.DEFAULT_PORT, () => console.info(`Http server running on port ${env.DEFAULT_PORT}`));
-}
+// http server
+const httpServer = http.createServer(function handleConnection(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+) {
+  expressApp(req, res);
+});
 
-run();
+// eslint-disable-next-line no-unused-vars
+const kernel = new Kernel(expressApp, httpServer);

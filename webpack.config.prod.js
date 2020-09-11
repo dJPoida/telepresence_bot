@@ -11,9 +11,11 @@ const baseConfig = require('./webpack.config.base');
 const entryPoints = require('./webpack.entrypoints');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+const clientSourcePath = path.resolve(__dirname, 'src/client');
+const clientDistPath = path.resolve(__dirname, 'dist/client');
+
 const appVersionSuffix = packageJson.version.replace(/\./g, '-');
 
-const clientSourcePath = path.resolve(__dirname, 'src/client');
 
 const entry = (() => {
   const result = {};
