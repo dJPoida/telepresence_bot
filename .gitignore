@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Raspberry Pi Image and backup config
+raspberry_pi_image/
