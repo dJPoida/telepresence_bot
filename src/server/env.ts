@@ -27,7 +27,6 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 export const env = {
-  NODE_ENV: envString('NODE_ENV'),
   IS_PRODUCTION,
   IS_DEVELOPMENT,
   USE_WEBPACK: envBool('USE_WEBPACK'),
