@@ -29,10 +29,12 @@ const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 export const env = {
   IS_PRODUCTION,
   IS_DEVELOPMENT,
+  LOG_PATH: resolve('../../', envString('LOG_PATH')),
   USE_WEBPACK: envBool('USE_WEBPACK'),
   DEFAULT_PORT: envNum('DEFAULT_PORT'),
   SOURCE_PATH: resolve(__dirname, '../../src'),
   DIST_PATH: resolve(__dirname, '../../dist'),
+  CLIENT_KEY: envString('CLIENT_KEY'),
 } as const;
 
 export type env = typeof env;

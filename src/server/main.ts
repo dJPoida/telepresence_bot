@@ -2,6 +2,13 @@ import express from 'express';
 import http from 'http';
 import { Kernel } from './lib/kernel';
 import * as REMEMBER_OVERRIDES from '../shared/types/overrides.type';
+import { initLogger } from './helpers/logger.helper';
+import { ContextLogger } from './helpers/context-logger.helper';
+
+// Logger
+initLogger();
+const log = new ContextLogger('main.ts');
+log.info('Booting...');
 
 // Express app
 const expressApp = express();

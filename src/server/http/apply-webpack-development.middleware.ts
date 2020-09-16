@@ -3,6 +3,7 @@ import express from 'express';
 import { resolve, join } from 'path';
 import { wait } from '../../shared/helpers/wait.helper';
 import { env } from '../env';
+import { ContextLogger } from '../helpers/context-logger.helper';
 
 /**
  * @description
@@ -13,7 +14,8 @@ import { env } from '../env';
 export function applyWebpackDevelopmentMiddleware(
   expressApp: express.Express,
 ) {
-  console.info('Enabling webpack for client compilation');
+  const log = new ContextLogger('applyWebpackDevelopmentMiddleware()');
+  log.info('Enabling webpack for client compilation');
 
   // eslint-disable-next-line import/no-extraneous-dependencies, node/no-unpublished-require, global-require, @typescript-eslint/no-var-requires
   const webpack = require('webpack');
@@ -52,11 +54,11 @@ export function applyWebpackDevelopmentMiddleware(
   // Attach some middleware that holds incoming request until webpack has compiled
   expressApp.use(async (req, res, next) => {
     if (expressApp.developmentEnvironmentCompiling) {
-      console.log(`Holding incoming request "${req.url}" while compiling webpack...`);
+      log.info(`Holding incoming request "${req.url}" while compiling webpack...`);
       while (expressApp.developmentEnvironmentCompiling) {
         await wait(100);
       }
-      console.log(`Releasing held request "${req.url}" now that webpack is compiled.`);
+      log.info(`Releasing held request "${req.url}" now that webpack is compiled.`);
     }
     next();
   });
