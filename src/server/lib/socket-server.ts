@@ -1,11 +1,12 @@
-import { TypedEventEmitter } from "../../shared/helpers/typed-event-emitter.helper";
-import { classLoggerFactory } from "../helpers/class-logger-factory.helper";
-import {SocketServerEventMap, SOCKET_SERVER_EVENT} from '../const/socket-server-event.const';
-import {A_SOCKET_CLIENT_MESSAGE, SOCKET_CLIENT_MESSAGE} from '../../shared/constants/socket-client-message.const';
-import {A_SOCKET_SERVER_MESSAGE, SocketServerMessageMap, SOCKET_SERVER_MESSAGE} from '../../shared/constants/socket-server-message.const';
-import { env } from "process";
-import { Socket } from "socket.io";
-import { SocketHandshakeQuery } from "../../shared/types/socket-handshake-query.type";
+import { env } from 'process';
+import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
+import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
+import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
+import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
+import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
+import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
+
+let socketServerInstance: null | SocketServer = null;
 
 /**
  * @class SocketServer
@@ -14,26 +15,31 @@ import { SocketHandshakeQuery } from "../../shared/types/socket-handshake-query.
  * Controls the sending and receiving of information from and to the connected clients
  * over sockets
  */
-export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
-
+class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   protected readonly log = classLoggerFactory(this);
 
-  private readonly io: SocketIO.Server;
+  private _io: SocketIO.Server | null = null;
 
-  private connectedClientCount: number = 0;
-
+  private connectedClientCount = 0;
 
   /**
-   * @constructor
+   * The SocketIO Server
    */
-  constructor(io: SocketIO.Server) {
-    super();
+  get io(): SocketIO.Server { if (!this._io) throw ReferenceError('Attempt to access SocketServer.io prior to assignment!'); return this._io; }
 
-    this.io = io;
+  /**
+   * @description
+   * Create a new instance of the Socket Server Class if one does not already exist
+   *
+   * @returns {SocketServer}
+   */
+  static getInstance() {
+    if (!socketServerInstance) {
+      socketServerInstance = new SocketServer();
+    }
 
-    this.bindEvents();
+    return socketServerInstance;
   }
-
 
   /**
    * Bind the event listeners this class cares about
@@ -44,14 +50,12 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     this.io.on('connection', this.handleSocketConnected.bind(this));
   }
 
-
   /**
    * Fired when the Server Socket Handler is initialised
    */
   private handleInitialised() {
     this.log.info('Socket Server Initialised.');
   }
-
 
   /**
    * Fired when a client socket connection is established
@@ -64,8 +68,8 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
 
     socket.clientType = (socket.handshake.query as SocketHandshakeQuery).clientType;
 
-    socket.on('disconnect', reason => this.handleSocketDisconnected(socket, reason));
-    socket.once(SOCKET_CLIENT_MESSAGE.AUTH, payload => this._handleSocketAuthReceived(socket, payload.key));
+    socket.on('disconnect', (reason) => this.handleSocketDisconnected(socket, reason));
+    socket.once(SOCKET_CLIENT_MESSAGE.AUTH, (payload) => this._handleSocketAuthReceived(socket, payload.key));
 
     // Emit an auth challenge
     socket.emit(SOCKET_SERVER_MESSAGE.CHALLENGE);
@@ -74,11 +78,10 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     socket.authTimeout = setTimeout(() => {
       this.log.warn('Socket not authenticated. Booting.');
       clearTimeout(socket.authTimeout);
-      socket.emit(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, { reason: 'No auth provided in the allotted time. Goodbye.' } );
+      socket.emit(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, { reason: 'No auth provided in the allotted time. Goodbye.' });
       socket.disconnect();
     }, 3000);
   }
-
 
   /**
    * Fired when an incoming socket attempts to authenticate.
@@ -89,7 +92,7 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
 
     // TODO: at some point in the future add some real auth here
     if (key !== env.CLIENT_KEY) {
-      this.log.warn('Socket provided an invalid CLIENT_KEY. Booting.', {key});
+      this.log.warn('Socket provided an invalid CLIENT_KEY. Booting.', { key });
       socket.emit(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, { reason: 'Invalid auth provided. Goodbye.' });
       socket.disconnect();
       return;
@@ -102,18 +105,19 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     this.connectedClientCount += 1;
 
     // If everything else checks out - setup the rest of the socket handler stuff
-    this.log.info(`New Socket Authenticated OK.`, { connectedClientCount: this.connectedClientCount });
+    this.log.info('New Socket Authenticated OK.', { connectedClientCount: this.connectedClientCount });
     socket.on('error', this.handleSocketClientError.bind(this));
     socket.on(SOCKET_CLIENT_MESSAGE.COMMAND, (payload) => this.emitImmediate(
       SOCKET_SERVER_EVENT.CLIENT_COMMAND,
       { socket, payload },
     ));
 
+    // Let the socket know they've been authenticated
+    socket.emit(SOCKET_SERVER_MESSAGE.AUTHORIZED, undefined);
+
     // Notify any listeners of this class that a client has connected
     this.emit(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, { socket, connectedClientCount: this.connectedClientCount });
   }
-
-
 
   /**
    * Fired when a client socket is disconnected
@@ -130,7 +134,6 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     }
   }
 
-
   /**
    * Handle an error in a socket
    */
@@ -138,18 +141,22 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     this.log.error(`Socket client error: ${err}`, err);
   }
 
-
   /**
    * @description
    * Initialise the Server Socket Handler
    */
-  async initialise() {
+  async initialise(io: SocketIO.Server) {
     this.log.info('Socket Server initialising...');
+
+    // Attach the Socket Server
+    this._io = io;
+
+    // Bind the events
+    this.bindEvents();
 
     // Let everyone know that the Socket Handler is initialised
     this.emit(SOCKET_SERVER_EVENT.INITIALISED, undefined);
   }
-
 
   /**
    * Send a message to a specific socket or to everyone
@@ -168,3 +175,5 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     }
   }
 }
+
+export const socketServer = SocketServer.getInstance();

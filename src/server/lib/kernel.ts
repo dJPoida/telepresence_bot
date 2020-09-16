@@ -5,7 +5,7 @@ import { KernelEventPayload, KERNEL_EVENT } from '../const/kernel_event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
 import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
-import { SocketServer } from './socket-server';
+import { socketServer } from './socket-server';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 
 
@@ -16,10 +16,7 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   
   public readonly httpServer: http.Server;
   
-  private _initialised: boolean;
-
-  public readonly socketServer: SocketServer;
-  
+  private _initialised: boolean = false;
   
   /**
   * @constructor
@@ -29,12 +26,7 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
     
     this.expressApp = expressApp;
     this.httpServer = httpServer;
-    this.socketServer = new SocketServer(socketIo(httpServer));
 
-    this._initialised = false;
-    
-    this._bindEvents();
-    
     this.initialise();
   }
   
@@ -47,9 +39,13 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   async initialise() {
     this.log.info('Kernel initialising...');
 
+    
+    socketServer.initialise(socketIo(this.httpServer));
+    
     // TODO: Initializing stuff
-
+        
     this._initialised = true;
+    this._bindEvents();
     this.emit(KERNEL_EVENT.INITIALISED, undefined);
   }
   

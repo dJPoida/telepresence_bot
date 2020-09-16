@@ -7,13 +7,13 @@ import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/cons
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
 import { global } from '../constants/global.constant';
 
-type ConsoleSocketContext = {
+type SocketContext = {
   sendCommand: (payload: ClientCommand) => any,
   connected: boolean,
   ws: SocketIOClient.Socket;
 };
 
-export const ConsoleSocketContext = createContext<ConsoleSocketContext>(null as any);
+export const SocketContext = createContext<SocketContext>(null as any);
 
 const ws = socketIoClient(
   {
@@ -33,7 +33,7 @@ const ws = socketIoClient(
  * @param param0
  */
 export const SocketProvider: React.FC = function SocketProvider({ children }) {
-  const [connected, setConnected] = useState<ConsoleSocketContext['connected']>(false);
+  const [connected, setConnected] = useState<SocketContext['connected']>(false);
 
   const sendCommand = useCallback(function sendCommand(payload: ClientCommand) {
     console.log('[sendCommand]', payload);
@@ -43,7 +43,6 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       ws.emit(SOCKET_CLIENT_MESSAGE.COMMAND, payload);
     }
   }, [connected]);
-
 
   /**
    * Connect listeners on boot
@@ -87,8 +86,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       console.log('[handleChallenge] - sending challenge response');
 
       // TODO: Implement proper auth
-      const authToken = 
-      ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
+      const authToken = ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
         key: global.CLIENT_KEY,
       });
     }
@@ -142,8 +140,8 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
   }, []);
 
   return (
-    <ConsoleSocketContext.Provider value={{ sendCommand, ws, connected }}>
+    <SocketContext.Provider value={{ sendCommand, ws, connected }}>
       {children}
-    </ConsoleSocketContext.Provider>
+    </SocketContext.Provider>
   );
 };

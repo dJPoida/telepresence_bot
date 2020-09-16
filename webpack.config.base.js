@@ -6,8 +6,8 @@ const webpack = require('webpack');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const packageJson = require('./package.json');
 const { env } = require('process');
+const packageJson = require('./package.json');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
@@ -32,11 +32,6 @@ module.exports = {
 
     new CleanWebpackPlugin(),
 
-    // Extract the compiled CSS for each entry point into an external file
-    new MiniCssExtractPlugin({
-      filename: 'css/[name].css',
-    }),
-
     // Copy other static assets to our dist folder
     new CopyWebpackPlugin({
       patterns: [
@@ -57,6 +52,11 @@ module.exports = {
         },
       ],
     }),
+
+    // Extract the compiled CSS for each entry point into an external file
+    new MiniCssExtractPlugin({
+      filename: 'css/[name].css',
+    }),
   ],
 
   // When importing a module whose path matches one of the following, just
@@ -64,7 +64,7 @@ module.exports = {
   // This is important because it allows us to avoid bundling all of our
   // dependencies, which allows browsers to cache those libraries between builds.
   externals: {
-    'react': 'React',
-    'react-dom': 'ReactDOM'
-  }
+    react: 'React',
+    'react-dom': 'ReactDOM',
+  },
 };

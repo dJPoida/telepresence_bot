@@ -43,6 +43,7 @@ module.exports = {
     'react/prop-types': 'off',
     'prefer-arrow-callback': 'off',
     'object-curly-newline': 'off',
+    'no-param-reassign': 'off',
     'max-len': ['error', { code: 180, ignoreComments: true }],
     'no-underscore-dangle': 'off',
     'no-await-in-loop': 'off',
@@ -52,6 +53,8 @@ module.exports = {
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/no-this-alias': 'off',
     '@typescript-eslint/camelcase': 'off',
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': ['error', { variables: false }],
     'import/extensions': [
       'error',
       'ignorePackages',

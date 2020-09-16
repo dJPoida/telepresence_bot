@@ -7,10 +7,10 @@ const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const packageJson = require('./package.json');
 const entryPoints = require('./webpack.entrypoints');
 const baseConfig = require('./webpack.config.base');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
@@ -63,6 +63,7 @@ module.exports = wpMerge.merge(baseConfig, {
             loader: 'css-loader',
             options: {
               sourceMap: true,
+              url: false,
             },
           },
           {
@@ -85,10 +86,10 @@ module.exports = wpMerge.merge(baseConfig, {
       templateParameters: {
         appTitle: 'Telepresence Bot',
         appVersionSuffix,
-        jsSuffix: 'development'
+        jsSuffix: 'development',
       },
     })),
-        
+
     new webpack.HotModuleReplacementPlugin(),
   ],
 });

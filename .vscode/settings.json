@@ -27,7 +27,6 @@
   "todo-tree.general.tags": [
     "todo",
     "deprecated",
-    "test",
     "note",
   ],
   "todo-tree.highlights.defaultHighlight": {
@@ -40,10 +39,6 @@
     "deprecated": {
       "background": "#161616",
       "foreground": "red"
-    },
-    "test": {
-      "background": "#161616",
-      "foreground": "green"
     },
     "note": {
       "background": "#161616",
@@ -58,5 +53,16 @@
   "todo-tree.general.revealBehaviour": "start of line",
   "todo-tree.filtering.excludeGlobs": [
     "**/dist/*"
+  ],
+  "cSpell.words": [
+    "devtool",
+    "eldred",
+    "entrypoints",
+    "norestart",
+    "peter",
+    "peter eldred",
+    "respawn",
+    "telepresence",
+    "webcam"
   ],
 }
