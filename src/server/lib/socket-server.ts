@@ -5,6 +5,7 @@ import {A_SOCKET_CLIENT_MESSAGE, SOCKET_CLIENT_MESSAGE} from '../../shared/const
 import {A_SOCKET_SERVER_MESSAGE, SocketServerMessageMap, SOCKET_SERVER_MESSAGE} from '../../shared/constants/socket-server-message.const';
 import { env } from "process";
 import { Socket } from "socket.io";
+import { SocketHandshakeQuery } from "../../shared/types/socket-handshake-query.type";
 
 /**
  * @class SocketServer
@@ -60,6 +61,9 @@ export class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
 
     // Create a temporary handler for this socket until they identify who / what they are
     socket.authKey = null;
+
+    socket.clientType = (socket.handshake.query as SocketHandshakeQuery).clientType;
+
     socket.on('disconnect', reason => this.handleSocketDisconnected(socket, reason));
     socket.once(SOCKET_CLIENT_MESSAGE.AUTH, payload => this._handleSocketAuthReceived(socket, payload.key));
 

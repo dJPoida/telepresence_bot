@@ -1,6 +1,7 @@
 import Express = require('express');
 import SocketIO = require('socket.io');
 import { ClientSocketMessagePayload, SOCKET_CLIENT_MESSAGE } from '../constants/socket-client-message.const';
+import { A_SOCKET_CLIENT_TYPE } from '../constants/socket-client-type.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../constants/socket-server-message.const';
 import { Listener } from './listener.type';
 
@@ -14,7 +15,6 @@ declare global {
   // Socket connection on the client
   namespace SocketIOClient {
     interface Socket {
-
       // standard protocol
       on(event: 'connect', listener: Listener<undefined>): any;
       once(event: 'connect', listener: Listener<undefined>): any;
@@ -55,6 +55,7 @@ declare global {
   // Socket connection on the server
   namespace SocketIO {
     interface Socket {
+      clientType: A_SOCKET_CLIENT_TYPE;
       authTimeout: ReturnType<typeof setTimeout>;
       authKey: null | string;
 

@@ -7,6 +7,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
+const { env } = require('process');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
@@ -26,6 +27,7 @@ module.exports = {
     new webpack.DefinePlugin({
       // Put: 'client side variables here'
       __VERSION__: JSON.stringify(packageJson.version),
+      __CLIENT_KEY__: JSON.stringify(env.CLIENT_KEY), // TODO: remove and implement proper auth
     }),
 
     new CleanWebpackPlugin(),
