@@ -1,11 +1,35 @@
 $orange: #FF6D00;
 $white: #F0F0F0;
+$black: #000;
+$yellow: #FFEA00;
+$red: #FF0015;
+$blue: #0095FF;
+$green: #15FF00;
 
 $primary-color: $orange;
-$background-color: #000;
+$background-color: $black;
+
+:root {
+  --universal-padding: 1rem;
+}
 
 @import './fonts/telepresence-bot-icons';
 
+@import './components/_components';
+
+html {
+  position: static;
+  overflow-y: hidden;
+  height: 100%;
+  max-height: 100%;
+}
+
 body {
-    background-color: $background-color;
+  background-color: $background-color;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+  max-height: 100%;
 }

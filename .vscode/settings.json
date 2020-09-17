@@ -55,6 +55,7 @@
     "**/dist/*"
   ],
   "cSpell.words": [
+    "cancelable",
     "devtool",
     "eldred",
     "entrypoints",
@@ -63,6 +64,7 @@
     "peter eldred",
     "respawn",
     "telepresence",
+    "unmount",
     "webcam"
   ],
 }
