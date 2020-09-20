@@ -1,7 +1,8 @@
+import { EventEmitter } from 'events';
 import ws281x from 'rpi-ws281x-native';
 
 export class LEDStrip {
-  private device = ws281x;
+  private device: EventEmitter = ws281x;
 
   /**
    * @constructor
