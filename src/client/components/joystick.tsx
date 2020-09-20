@@ -2,6 +2,7 @@ import React, { createRef, CSSProperties, ReactNode } from 'react';
 import classNames from 'classnames';
 import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { findTouchFromTouchIdentifier } from '../helpers/find-touch-from-touch-identifier.helper';
+import { Icon } from './icon';
 
 export type JoystickProps = {
   className?: string,
@@ -34,7 +35,6 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   private updateInterval: null | ReturnType<typeof setInterval>;
   private position: XYCoordinate = { x: 0, y: 0 };
   private knobRef: React.RefObject<HTMLDivElement>;
-  private shaftRef: React.RefObject<HTMLDivElement>;
   private dragZoneRef: React.RefObject<HTMLDivElement>;
   private dragPosition?: XYCoordinate;
   private dragPositionOffset?: XYCoordinate;
@@ -53,7 +53,6 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
 
     this.updateInterval = null;
     this.knobRef = createRef();
-    this.shaftRef = createRef();
     this.dragZoneRef = createRef();
   }
 
@@ -129,49 +128,6 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * Perform the math required to get the shaft transformation string
-   */
-  get shaftTransformValues(): {
-    rotation: number,
-    scale: number,
-    } {
-    const deltaX = this.internalPosition.x;
-    const deltaY = this.internalPosition.y;
-    const rad = Math.atan2(deltaY, deltaX);
-    const deg = rad * (180 / Math.PI) + 90;
-    const scale = Math.sqrt((this.internalPosition.x * this.internalPosition.x) + (this.internalPosition.y * this.internalPosition.y)) / 50;
-
-    return {
-      rotation: deg,
-      scale,
-    };
-  }
-
-  /**
-   * Return the CSS that needs to be applied to the shaft
-   */
-  get shaftTransformCSS(): CSSProperties {
-    const { shaftTransformValues } = this;
-    return {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      '--rotation': `${shaftTransformValues.rotation}deg`,
-      '--scale': `${shaftTransformValues.scale}`,
-    };
-  }
-
-  /**
-   * Return the CSS that needs to be applied to the shaft
-   */
-  get shaftTransformCSSString(): string {
-    const { shaftTransformValues } = this;
-    return `
-      --rotation: ${shaftTransformValues.rotation}deg;
-      --scale: ${shaftTransformValues.scale};
-    `;
-  }
-
-  /**
    * Bind any window event listeners at the start of a drag operation
    */
   bindDragEvents = (): void => {
@@ -216,9 +172,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       const maxWidth = dragZoneBoundingRect.width / 2;
       const maxHeight = dragZoneBoundingRect.height / 2;
 
+      console.log(this.dragPositionOffset);
+
       this.internalPosition = {
-        x: (Math.max(Math.min(this.dragPosition.x - dragZoneBoundingRect.left - maxWidth, maxWidth), -maxWidth) / maxWidth) * 100,
-        y: (Math.max(Math.min(this.dragPosition.y - dragZoneBoundingRect.top - maxWidth, maxWidth), -maxHeight) / maxHeight) * 100,
+        x: ((Math.max(Math.min(this.dragPosition.x - dragZoneBoundingRect.left - maxWidth, maxWidth), -maxWidth) / maxWidth) * 100),
+        y: ((Math.max(Math.min(this.dragPosition.y - dragZoneBoundingRect.top - maxWidth, maxWidth), -maxHeight) / maxHeight) * 100),
       };
     }
 
@@ -339,13 +297,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    */
   startAnimating = (): void => {
     const getStateValues = () => {
-      const { knobRef, shaftRef, knobTransformCSSString, shaftTransformCSSString, doInternalUpdate } = this;
+      const { knobRef, knobTransformCSSString, doInternalUpdate } = this;
       const { updating } = this.state;
       return {
         knobRef,
-        shaftRef,
         knobTransformCSSString,
-        shaftTransformCSSString,
         updating,
         doInternalUpdate,
       };
@@ -354,19 +310,13 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     requestAnimationFrame(function animate(time) {
       const {
         knobRef,
-        shaftRef,
         knobTransformCSSString,
-        shaftTransformCSSString,
         updating,
         doInternalUpdate,
       } = getStateValues();
 
       if (knobRef.current) {
         knobRef.current.setAttribute('style', knobTransformCSSString);
-      }
-
-      if (shaftRef.current) {
-        shaftRef.current.setAttribute('style', shaftTransformCSSString);
       }
 
       if (updating) {
@@ -388,6 +338,18 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     this.dragPosition = startPosition;
     this.dragPositionOffset = startPosition;
     this.dragTouchIdentifier = touchIdentifier;
+
+    if (startPosition && this.knobRef.current && this.dragZoneRef.current) {
+      // TODO: the offset from the touch / click is not correct. This needs to be tuned up
+      const knobBoundingRect = this.knobRef.current.getBoundingClientRect();
+
+      this.dragPositionOffset = {
+        x: startPosition.x - knobBoundingRect.left - (knobBoundingRect.width / 2),
+        y: startPosition.y - knobBoundingRect.top - (knobBoundingRect.height / 2),
+      };
+    } else {
+      this.dragPositionOffset = { x: 0, y: 0 };
+    }
 
     this.setState({
       dragging: true,
@@ -578,21 +540,19 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         {/* The background is the black area behind the joystick */}
         <div className="background" />
 
+        {/* This is the diamond shape representing the limit */}
+        <svg
+          className="limit-svg"
+          viewBox="0 0 100 100"
+        >
+          {/* eslint-disable-next-line max-len */}
+          <path d="M96.49,58.5l-38,38a12,12,0,0,1-17,0l-38-38a12,12,0,0,1,0-17l38-38a12,12,0,0,1,17,0l38,38A12,12,0,0,1,96.49,58.5Z" />
+        </svg>
+
         {/* Mainly used for calculating the valid range that the knob can be dragged within */}
         <div
           className="drag-zone"
           ref={this.dragZoneRef}
-        />
-
-        <div
-          className="coupler"
-        />
-
-        {/* The shaft of the joystick */}
-        <div
-          className="shaft"
-          ref={this.shaftRef}
-          style={this.shaftTransformCSS}
         />
 
         {/* This is the knob / ball of the joystick */}
@@ -606,7 +566,9 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
           onTouchStart={this.handleKnobTouchStart}
           onTouchEnd={this.handleKnobTouchEnd}
           onDragStart={(e) => e.preventDefault()}
-        />
+        >
+          <Icon icon="control-camera" />
+        </div>
 
       </div>
     );

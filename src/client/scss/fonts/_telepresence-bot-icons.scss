@@ -2,11 +2,11 @@ $font-version: 1.0;
 
 @font-face {
     font-family: 'telepresence-bot-icons';
-    src:  url('/fonts/telepresence-bot-icons/telepresence-bot.eot?#{$font-version}');
-    src:  url('/fonts/telepresence-bot-icons/telepresence-bot.eot?#{$font-version}#iefix') format('embedded-opentype'),
-      url('/fonts/telepresence-bot-icons/telepresence-bot.ttf?#{$font-version}') format('truetype'),
-      url('/fonts/telepresence-bot-icons/telepresence-bot.woff?#{$font-version}') format('woff'),
-      url('/fonts/telepresence-bot-icons/telepresence-bot.svg?#{$font-version}#telepresence-bot-icons') format('svg');
+    src:  url('/fonts/telepresence-bot-icons/telepresence-bot-icons.eot?#{$font-version}');
+    src:  url('/fonts/telepresence-bot-icons/telepresence-bot-icons.eot?#{$font-version}#iefix') format('embedded-opentype'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot-icons.ttf?#{$font-version}') format('truetype'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot-icons.woff?#{$font-version}') format('woff'),
+      url('/fonts/telepresence-bot-icons/telepresence-bot-icons.svg?#{$font-version}#telepresence-bot-icons') format('svg');
     font-weight: normal;
     font-style: normal;
     font-display: block;

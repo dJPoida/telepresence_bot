@@ -1,0 +1,44 @@
+.control-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+
+  .menu-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4rem; 
+    background-color: $primary-color;
+  }
+  
+  .controls-wrapper {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    bottom: 0;
+    left: 0; 
+    right: 0;
+    height: 25vmin;
+
+    .controls {
+      background-color: $primary-color;
+      
+      &.left {
+        border-top-right-radius: 5vmin;
+      }
+      
+      &.right {
+        border-top-left-radius: 5vmin;
+      }
+
+      .joystick-wrapper {
+        width: 25vmin;
+        height: 25vmin;
+        overflow: visible;
+      }
+    }
+  }
+} 

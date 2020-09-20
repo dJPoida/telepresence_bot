@@ -6,9 +6,22 @@
   
   svg.clip-path-svg {
     position: absolute;
-    width: 0;
+    width: 0; 
     height: 0;
   } 
+
+  svg.limit-svg {
+    position: absolute;
+    path {
+      stroke: $border-color;
+      stroke-width: 1px;
+    }
+    left: var(--joystick-padding);
+    top: var(--joystick-padding);
+    width: calc(100% - (var(--joystick-padding) * 2));
+    height: calc(100% - (var(--joystick-padding) * 2));
+    fill: none;
+  }
 
   .background {
     position: absolute;
@@ -32,49 +45,28 @@
     height: 70%;
   }
 
-  .shaft {
-    --scale: 0;
-    --rotation: 0deg;
-    display: block;
-    position: absolute;
-    background: lighten($black, 50%); 
-    background: linear-gradient(lighten($black, 50%) 0%, lighten($black, 30%) 100%); 
-    bottom: 50%;
-    left: 50%;
-    width: 20%; 
-    height: 10%;
-    user-select: none;
-    pointer-events: none;
-    transform-origin: 50% 100%;
-    transform: translateX(-50%) rotate(var(--rotation)) scaleY(var(--scale));
-  }
-
-  .coupler {
-    display: block;
-    position: absolute;
-    background: lighten($black, 30%); 
-    border-radius: 50%;
-    top: 40%;
-    left: 40%;
-    width: 20%; 
-    height: 20%;
-    user-select: none;
-    pointer-events: none;
-  }
-
   .knob { 
     --offsetX: 0;
     --offsetY: 0;
     position: absolute;
     display: block;
     cursor: pointer;
-    background: $primary-color;
-    background: radial-gradient(circle, lighten($primary-color, 20%) 0%, $primary-color 50%, darken($primary-color, 30%) 100%);
+    background: $light-background-color;
     top: calc(30% + (var(--offsetY) / 4));
     left: calc(30% + (var(--offsetX) / 4));
     width: 40%;
     height: 40%;
     border-radius: 50%;
+    border: 1px solid $border-color;
     user-select: none;
+
+    i.tbp-icon {
+      position: absolute;
+      color: lighten($light-background-color, 15%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3em; 
+    }
   }
 }

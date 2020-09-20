@@ -1,5 +1,5 @@
-import Express = require('express');
-import SocketIO = require('socket.io');
+/* eslint-disable @typescript-eslint/adjacent-overload-signatures */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientSocketMessagePayload, SOCKET_CLIENT_MESSAGE } from '../constants/socket-client-message.const';
 import { A_SOCKET_CLIENT_TYPE } from '../constants/socket-client-type.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../constants/socket-server-message.const';
@@ -50,7 +50,7 @@ declare global {
       once(event: SOCKET_SERVER_MESSAGE['STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]>): any;
     }
-  }    
+  }
 
   // Socket connection on the server
   namespace SocketIO {

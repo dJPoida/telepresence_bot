@@ -7,53 +7,53 @@ import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { socketServer } from './socket-server';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
-
+import { LEDStrip } from './led-strip';
 
 export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   protected readonly log = classLoggerFactory(this);
 
   public readonly expressApp: Express;
-  
+
   public readonly httpServer: http.Server;
-  
-  private _initialised: boolean = false;
-  
+
+  public readonly ledStrip: LEDStrip;
+
+  private _initialised = false;
+
   /**
   * @constructor
   */
   constructor(expressApp: Express, httpServer: http.Server) {
     super();
-    
+
     this.expressApp = expressApp;
     this.httpServer = httpServer;
+    this.ledStrip = new LEDStrip();
 
     this.initialise();
   }
-  
-  get initialised() { return this._initialised; }
 
-  
+  get initialised(): boolean { return this._initialised; }
+
   /**
   * Initialise the kernel
   */
-  async initialise() {
+  private async initialise(): Promise<void> {
     this.log.info('Kernel initialising...');
 
-    
     socketServer.initialise(socketIo(this.httpServer));
-    
+
     // TODO: Initializing stuff
-        
+
     this._initialised = true;
-    this._bindEvents();
+    this.bindEvents();
     this.emit(KERNEL_EVENT.INITIALISED, undefined);
   }
-  
-  
+
   /**
    * Run the application
    */
-  async run() {
+  private async run(): Promise<void> {
     this.log.info('Kernel Running');
 
     // Apply the routing and middleware to the express app
@@ -63,20 +63,18 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
     this.httpServer.listen(env.DEFAULT_PORT, () => this.log.info(`Http server running on port ${env.DEFAULT_PORT}`));
   }
 
-
   /**
    * Bind the event listeners this class cares about
    */
-  _bindEvents() {
-    this.once(KERNEL_EVENT.INITIALISED, this._handleInitialised.bind(this));
+  private bindEvents() {
+    this.once(KERNEL_EVENT.INITIALISED, this.handleInitialised.bind(this));
   }
-
 
   /**
    * Fired once after the kernel has initialised
    */
-  _handleInitialised() {
+  private handleInitialised() {
     this.log.info('Kernel initialised.');
     this.run();
-  } 
+  }
 }
