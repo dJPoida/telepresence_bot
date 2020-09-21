@@ -6,11 +6,11 @@ import { env } from '../env';
 import { ContextLogger } from '../helpers/context-logger.helper';
 
 /**
- * @description
- * Initialise webpack to compile and serve the client in development mode
- *
- * @note: the `require()` statements are intentionally localised to prevent import in production builds
- */
+* @description
+* Initialise webpack to compile and serve the client in development mode
+*
+* @note: the `require()` statements are intentionally localised to prevent import in production builds
+*/
 export function applyWebpackDevelopmentMiddleware(
   expressApp: express.Express,
 ) {

@@ -9,6 +9,7 @@ const RIGHT_EDGE_LED_COUNT = 2;
 const LEFT_EDGE_LED_COUNT = 2;
 const BACK_LED_COUNT = 2;
 const PIXEL_INDEX_MAP: null | number[] = null; // Only required if the LEDs are not wired in the correct sequence.
+// const GPIO_PIN = 18; // No capability to change this on the current ws281x library implementation
 
 export type LEDColors = {
   front: number,
@@ -23,6 +24,7 @@ export class LEDStrip extends TypedEventEmitter<LEDStripEventPayload> {
   private _initialised = false;
   private _brightness: number = DEFAULT_BRIGHTNESS;
   private _ledColors: LEDColors = { front: 0x0000FF, left: 0xFFFFFF, right: 0xFFFFFF, back: 0xFF0000 };
+  private _pixelData = new Uint32Array(this.numLEDs);
 
   /**
    * @constructor
@@ -53,19 +55,23 @@ export class LEDStrip extends TypedEventEmitter<LEDStripEventPayload> {
   get numLEDs(): number { return FRONT_LED_COUNT + RIGHT_EDGE_LED_COUNT + LEFT_EDGE_LED_COUNT + BACK_LED_COUNT; }
 
   /**
+   * Get the configured colors for the front / sides / back LED strips
+   */
+  get ledColors(): LEDColors { return this._ledColors; }
+
+  /**
    * Get the pixel data that is rendered to the LED Strip
    */
-  get pixelData(): Uint32Array {
-    const result = new Uint32Array(this.numLEDs);
-
-    return result;
-  }
+  get pixelData(): Uint32Array { return this._pixelData; }
 
   /**
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
     this.once(LED_STRIP_EVENT.INITIALISED, this.handleInitialised.bind(this));
+
+    // trap the SIGINT and reset before exit
+    process.on('SIGINT', this.handleApplicationTerminate.bind(this));
   }
 
   /**
@@ -111,10 +117,28 @@ export class LEDStrip extends TypedEventEmitter<LEDStripEventPayload> {
   }
 
   /**
-   * Take the information about the state of the LED strip and update it on the device
+   * Take the information about the state of the LED strip and update it into the PixelData
    */
   public async render():Promise<void> {
-    this.device.render(this.pixelData);
+    // Apply the front color
+    for (let i = 0; i < FRONT_LED_COUNT; i += 1) {
+      this._pixelData[i] = this.ledColors.front;
+    }
+    // apply the right edge color
+    for (let i = 0; i < RIGHT_EDGE_LED_COUNT; i += 1) {
+      this._pixelData[i + FRONT_LED_COUNT] = this.ledColors.right;
+    }
+    // apply the back color
+    for (let i = 0; i < BACK_LED_COUNT; i += 1) {
+      this._pixelData[i + FRONT_LED_COUNT + RIGHT_EDGE_LED_COUNT] = this.ledColors.back;
+    }
+    // apply the left edge color
+    for (let i = 0; i < LEFT_EDGE_LED_COUNT; i += 1) {
+      this._pixelData[i + FRONT_LED_COUNT + RIGHT_EDGE_LED_COUNT + BACK_LED_COUNT] = this.ledColors.left;
+    }
+
+    // Update the device
+    this.device.render(this._pixelData);
   }
 
   /**
@@ -125,5 +149,7 @@ export class LEDStrip extends TypedEventEmitter<LEDStripEventPayload> {
       ...this._ledColors,
       ...ledColors,
     };
+
+    this.render();
   }
 }
