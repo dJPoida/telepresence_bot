@@ -41,6 +41,8 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   private async initialise(): Promise<void> {
     this.log.info('Kernel initialising...');
 
+    this.ledStrip.initialise();
+
     socketServer.initialise(socketIo(this.httpServer));
 
     // TODO: Initializing stuff
