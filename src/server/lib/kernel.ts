@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import socketIo from 'socket.io';
 import http from 'http';
-import { KernelEventPayload, KERNEL_EVENT } from '../const/kernel_event.const';
+import { KernelEventPayload, KERNEL_EVENT } from '../const/kernel-event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
 import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';

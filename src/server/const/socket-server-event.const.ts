@@ -1,7 +1,6 @@
-import { ClientCommand } from "../../shared/constants/client-command.const";
+import { ClientCommand } from '../../shared/constants/client-command.const';
 
 /**
- * @description
  * Event Names
  */
 export const SOCKET_SERVER_EVENT = {
@@ -14,10 +13,9 @@ export type SOCKET_SERVER_EVENT = typeof SOCKET_SERVER_EVENT;
 export type A_SOCKET_SERVER_EVENT = SOCKET_SERVER_EVENT[keyof SOCKET_SERVER_EVENT];
 
 /**
- * @description
  * Event Payloads
  */
-export interface SocketServerEventMap {
+export interface SocketServerEventPayload {
   [SOCKET_SERVER_EVENT.INITIALISED]: undefined;
   [SOCKET_SERVER_EVENT.CLIENT_CONNECTED]: { socket: SocketIO.Socket, connectedClientCount: number };
   [SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED]: { socket: SocketIO.Socket, connectedClientCount: number };

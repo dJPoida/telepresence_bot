@@ -1,7 +1,7 @@
 import { env } from 'process';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
-import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
+import { SocketServerEventPayload, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
 import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
@@ -15,7 +15,7 @@ let socketServerInstance: null | SocketServer = null;
  * Controls the sending and receiving of information from and to the connected clients
  * over sockets
  */
-class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
+class SocketServer extends TypedEventEmitter<SocketServerEventPayload> {
   protected readonly log = classLoggerFactory(this);
 
   private _io: SocketIO.Server | null = null;

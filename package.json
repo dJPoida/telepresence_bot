@@ -1,6 +1,9 @@
 {
   "name": "telepresence_bot",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "description": "A NodeJS driver for a simple home-brew Raspberry Pi telepresence robot.",
   "main": "index.ts",
   "repository": "https://github.com/dJPoida/telepresence_bot.git",
@@ -8,10 +11,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node --unhandled-rejections=strict dist/server/main.js",
-    "dev": "NODE_ENV=\"development\" nodemon --exec \"npx ts-node\" \"src/server/main.ts\" -P tsconfig.server.dev.json",
-    "dev-win": "SET \"NODE_ENV=development\" && nodemon --exec \"npx ts-node\" \"src/server/main.ts\" -P tsconfig.server.dev.json",
-    "dev-old": "ts-node-dev --unhandled-rejections=strict -P tsconfig.server.dev.json --debug --respawn --notify false src/server/main.ts",
-    "dev:norestart": "ts-node-dev --unhandled-rejections=strict -P tsconfig.server.dev.json --debug --respawn --notify false --ignore-watch ['./*'] src/server/main.ts",
+    "dev": "export NODE_ENV=development || SET NODE_ENV=development && nodemon --exec \"npx ts-node\" \"src/server/main.ts\" -P tsconfig.server.dev.json",
     "build": "webpack --config webpack.config.prod.js && tsc -P tsconfig.server.prod.json"
   },
   "devDependencies": {

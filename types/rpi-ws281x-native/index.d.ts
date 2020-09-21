@@ -1,7 +1,7 @@
 declare module 'rpi-ws281x-native' {
   import { EventEmitter } from 'events';
 
-  interface ws281x extends EventEmitter {
+  export interface Ws281x extends EventEmitter {
     init: (numLeds: number, options: any) => void;
 
     setIndexMapping: (mapping: number[]) => void;
@@ -14,6 +14,8 @@ declare module 'rpi-ws281x-native' {
 
     isStub: () => boolean;
   }
+
+  const ws281x: Ws281x;
 
   export default ws281x;
 }
