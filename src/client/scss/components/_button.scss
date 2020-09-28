@@ -1,0 +1,49 @@
+$active-darken-amount: 15%;
+
+.btn {
+  --btn-background: #{$primary-color};
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  background-color: var(--btn-background);
+
+  &.square {
+    width: 2em;
+    height: 2em;
+  }
+
+  &.primary {
+    --btn-background: #{$primary-color};
+
+    &.active,
+    &:active {
+      --btn-background: #{darken($primary-color, $active-darken-amount) };
+    }
+  }
+
+  &.success {
+    --btn-background: #{$success-color};
+    
+    &.active,
+    &:active {
+      --btn-background: #{darken($success-color, $active-darken-amount) };
+    }
+  }
+
+  &.danger {
+    --btn-background: #{$danger-color};
+
+    &.active,
+    &:active {
+      --btn-background: #{darken($danger-color, $active-darken-amount) };
+    }
+  }
+
+  &.active {
+
+  }
+}

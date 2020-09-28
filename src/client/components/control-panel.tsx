@@ -1,32 +1,32 @@
-import React, { useContext } from 'react';
-import { SocketContext } from '../providers/socket.provider';
-import { DeadManButton } from './dead-man-button';
-import { Icon } from './icon';
+import React from 'react';
+import { ORIENTATION } from '../const/orientation.constant';
 import { Joystick } from './joystick';
+import { MenuBar } from './menu-bar';
+import { Slider } from './slider';
 
-export const ControlPanel: React.FC = () => {
-  const { connected } = useContext(SocketContext);
+export const ControlPanel: React.FC = () => (
+  <div className="control-panel">
 
-  return (
-    <div className="control-panel">
-      <div className="menu-bar" />
+    <MenuBar />
 
-      <div className="controls-wrapper">
-        <div className="controls left">
-          <div className="joystick-wrapper">
-            <Joystick
-              springBack={false}
-            />
-          </div>
+    <div className="controls-wrapper">
+      <div className="controls left">
+        <div className="joystick-wrapper">
+          <Joystick
+            springBack={false}
+          />
         </div>
-        <div className="controls right">
-          <div className="joystick-wrapper">
-            <Joystick
-              verboseUpdate
-            />
-          </div>
+      </div>
+      <div className="controls right">
+        <div className="slider-wrapper">
+          <Slider orientation={ORIENTATION.PORTRAIT} />
+        </div>
+        <div className="joystick-wrapper">
+          <Joystick
+            verboseUpdate
+          />
         </div>
       </div>
     </div>
-  );
-};
+  </div>
+);

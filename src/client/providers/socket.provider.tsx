@@ -5,7 +5,7 @@ import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-mess
 import { SOCKET_CLIENT_TYPE } from '../../shared/constants/socket-client-type.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
-import { global } from '../constants/global.constant';
+import { global } from '../const/global.constant';
 
 type SocketContext = {
   sendCommand: (payload: ClientCommand) => any,

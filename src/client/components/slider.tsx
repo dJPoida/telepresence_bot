@@ -1,51 +1,48 @@
 import React, { createRef, CSSProperties, ReactNode } from 'react';
 import classNames from 'classnames';
-import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { findTouchFromTouchIdentifier } from '../helpers/find-touch-from-touch-identifier.helper';
 import { Icon } from './icon';
 import { round } from '../../shared/helpers/round.helper';
 import { ICON } from '../const/icon.constant';
+import { AN_ORIENTATION, ORIENTATION } from '../const/orientation.constant';
 
-export type JoystickProps = {
+export type SliderProps = {
   className?: string,
+  orientation?: AN_ORIENTATION,
   disabled?: boolean,
   repeatRate?: number,
-  limit?: number,
-  springBack?: boolean,
   verboseUpdate?: boolean,
   onBeginUpdating?: () => void,
-  onUpdate?: (position: XYCoordinate) => void,
+  onUpdate?: (position: number) => void,
   onEndUpdating?: () => void,
 }
 
-type JoystickState = {
+type SliderState = {
   updating: boolean,
   dragging: boolean,
 }
 
 const DEFAULT_REPEAT_RATE = 50;
-const DEFAULT_SPRING_BACK = true;
-const SPRING_COEFFICIENT = 0.75;
-const SPRING_MIN_THRESHOLD = 0.5;
+const DEFAULT_ORIENTATION = ORIENTATION.PORTRAIT;
 
 /**
  * Note: The drag position influences the x and y coordinates but they are not governed by it
  * Note: This component attempts to avoid state to update the dom given the frequency and load of the updates
  */
-export class Joystick extends React.Component<JoystickProps, JoystickState> {
-  private internalPosition: XYCoordinate = { x: 0, y: 0 };
+export class Slider extends React.Component<SliderProps, SliderState> {
+  private internalPosition = 0;
   private updateInterval: null | ReturnType<typeof setInterval>;
-  private position: XYCoordinate = { x: 0, y: 0 };
+  private position = 0;
   private knobRef: React.RefObject<HTMLDivElement>;
   private dragZoneRef: React.RefObject<HTMLDivElement>;
-  private dragPosition?: XYCoordinate;
-  private dragPositionOffset?: XYCoordinate;
+  private dragPosition?: number;
+  private dragPositionOffset?: number;
   private dragTouchIdentifier?: number;
 
   /**
    * @constructor
    */
-  constructor(props: JoystickProps) {
+  constructor(props: SliderProps) {
     super(props);
 
     this.state = {
@@ -61,9 +58,9 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   /**
    * @inheritdoc
    */
-  componentDidUpdate(prevProps: JoystickProps, prevState: JoystickState): void {
-    // TODO: handle a change to props.disabled if the user is interacting with the joystick
-    // TODO: handle a change to props.refreshRate if the user is interacting with the joystick
+  componentDidUpdate(prevProps: SliderProps, prevState: SliderState): void {
+    // TODO: handle a change to props.disabled if the user is interacting with the slider
+    // TODO: handle a change to props.refreshRate if the user is interacting with the slider
   }
 
   /**
@@ -82,6 +79,28 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
+   * What orientation is the slider (horizontal / vertical)
+   */
+  get orientation(): AN_ORIENTATION {
+    const { orientation } = this.props;
+    return orientation ?? DEFAULT_ORIENTATION;
+  }
+
+  /**
+   * Simple wrapper around the orientation property to make code more legible
+   */
+  get isVertical(): boolean {
+    return this.orientation === ORIENTATION.PORTRAIT;
+  }
+
+  /**
+   * Simple wrapper around the orientation property to make code more legible
+   */
+  get isHorizontal(): boolean {
+    return this.orientation === ORIENTATION.LANDSCAPE;
+  }
+
+  /**
    * How frequently the update callback should be fired
    */
   get repeatRate(): number {
@@ -90,31 +109,18 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * To what value should the position be constrained (0-100)
-   */
-  get limit(): number {
-    const { limit } = this.props;
-    return Math.max(0, Math.min(limit ?? 100, 100));
-  }
-
-  /**
-  * Should the joystick spring back into the center when released
-  */
-  get springBack(): boolean {
-    const { springBack } = this.props;
-    return springBack ?? DEFAULT_SPRING_BACK;
-  }
-
-  /**
    * Return the CSS that needs to be applied to the knob to make it
    * appear like it's moving with the touch / drag operations
    */
   get knobTransformCSS(): CSSProperties {
-    return {
+    return this.isVertical ? {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      '--offsetX': `${this.internalPosition.x}%`,
-      '--offsetY': `${this.internalPosition.y}%`,
+      '--offsetY': `${this.internalPosition}%`,
+    } : {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      '--offsetX': `${this.internalPosition}%`,
     };
   }
 
@@ -123,10 +129,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * appear like it's moving with the touch / drag operations
    */
   get knobTransformCSSString(): string {
-    return `
-      --offsetX: ${this.internalPosition.x}%;
-      --offsetY: ${this.internalPosition.y}%;
-    `;
+    return this.isVertical ? `--offsetY: ${this.internalPosition}%;` : `--offsetX: ${this.internalPosition}%;`;
   }
 
   /**
@@ -171,47 +174,16 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     if (dragging && this.dragPosition && this.dragPositionOffset && this.dragZoneRef.current && this.knobRef.current) {
       const dragZoneBoundingRect = this.dragZoneRef.current.getBoundingClientRect();
 
-      const maxWidth = dragZoneBoundingRect.width / 2;
-      const maxHeight = dragZoneBoundingRect.height / 2;
+      const maxWidth = dragZoneBoundingRect.width;
+      const maxHeight = dragZoneBoundingRect.height;
 
-      const offsetDragPosition: XYCoordinate = {
-        x: round(this.dragPosition.x - dragZoneBoundingRect.left - maxWidth - this.dragPositionOffset.x, 2) * 2,
-        y: round(this.dragPosition.y - dragZoneBoundingRect.top - maxHeight - this.dragPositionOffset.y, 2) * 2,
-      };
+      const offsetDragPosition = this.isVertical
+        ? round(this.dragPosition - dragZoneBoundingRect.top - this.dragPositionOffset, 2)
+        : round(this.dragPosition - dragZoneBoundingRect.left - this.dragPositionOffset, 2);
 
-      this.internalPosition = {
-        x: Math.max(Math.min(offsetDragPosition.x / (maxWidth * 2), 1), -1) * 100,
-        y: Math.max(Math.min(offsetDragPosition.y / (maxHeight * 2), 1), -1) * 100,
-      };
-
-      // apply the offset drag position to the internal position and constrain the values
-      // this.internalPosition = {
-      //   x: (Math.max(Math.min(offsetDragPosition.x / (dragZoneBoundingRect.width / 2), 1), -1) * 100),
-      //   y: (Math.max(Math.min(offsetDragPosition.y / (dragZoneBoundingRect.height / 2), 1), -1) * 100),
-      // };
-      // console.log(this.internalPosition);
-
-      // this.internalPosition = {
-      //   x: ((Math.max(Math.min(knobPosition.x - dragZoneBoundingRect.left, maxWidth), -maxWidth) / maxWidth) * 100),
-      //   y: ((Math.max(Math.min(knobPosition.y - dragZoneBoundingRect.top, maxHeight), -maxHeight) / maxHeight) * 100),
-      // };
-    }
-
-    // Attempt to spring back to the center
-    else if (this.springBack && (Math.abs(this.internalPosition.x) > SPRING_MIN_THRESHOLD || Math.abs(this.internalPosition.y) > SPRING_MIN_THRESHOLD)) {
-      this.internalPosition = {
-        x: this.internalPosition.x * SPRING_COEFFICIENT,
-        y: this.internalPosition.y * SPRING_COEFFICIENT,
-      };
-    }
-
-    // reset to zero if below the spring threshold
-    else if (this.springBack && (Math.abs(this.internalPosition.x) < SPRING_MIN_THRESHOLD && Math.abs(this.internalPosition.y) < SPRING_MIN_THRESHOLD)) {
-      this.internalPosition = {
-        x: 0,
-        y: 0,
-      };
-      this.endUpdating();
+      this.internalPosition = this.isVertical
+        ? Math.max(Math.min(offsetDragPosition / maxHeight, 1), 0) * 100
+        : Math.max(Math.min(offsetDragPosition / maxWidth, 1), 0) * 100;
     }
   }
 
@@ -222,13 +194,12 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     const { onUpdate } = this.props;
 
     // Snap the position to the nearest integer
-    const snappedPosition = {
-      x: this.internalPosition.x <= 0 ? Math.ceil(this.internalPosition.x) : Math.floor(this.internalPosition.x),
-      y: this.internalPosition.y <= 0 ? Math.ceil(this.internalPosition.y) : Math.floor(this.internalPosition.y),
-    };
+    const snappedPosition = this.isVertical
+      ? this.internalPosition <= 0 ? Math.ceil(this.internalPosition) : Math.floor(this.internalPosition)
+      : this.internalPosition <= 0 ? Math.ceil(this.internalPosition) : Math.floor(this.internalPosition);
 
-    // Check to see if the position has changed in any way
-    const positionChanged = this.position.x !== snappedPosition.x || this.position.y !== snappedPosition.y;
+    // Check to see if the position has changed
+    const positionChanged = this.position !== snappedPosition;
 
     // Update the position to reflect the snapped position
     this.position = snappedPosition;
@@ -240,7 +211,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * Begin the updating of the joystick state
+   * Begin the updating of the slider state
    * Typically called by either the user mouse down or touch start events
    */
   startUpdating = (): boolean => {
@@ -264,7 +235,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
           setTimeout(onBeginUpdating, 0);
         }
 
-        // Start animating the joystick knob
+        // Start animating the slider knob
         this.startAnimating();
 
         // fire the onUpdates once
@@ -282,7 +253,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * End the updating of the joystick state
+   * End the updating of the slider state
    * Typically called by either the user mouse up or touch end events
    */
   endUpdating = (): boolean => {
@@ -310,7 +281,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * Begin requesting animation frames to update the joystick
+   * Begin requesting animation frames to update the slider
    */
   startAnimating = (): void => {
     const getStateValues = () => {
@@ -346,11 +317,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   /**
    * Begin the dragging operation
    *
-   * @param {XYCoordinate} startPosition the initial global client x position of the mouse cursor / touch event
+   * @param {number} startPosition the initial global client x or y position of the mouse cursor / touch event (depending on this.orientation)
    * @param {number} touchIdentifier the finger that was used to begin the drag operation (if touch initiated the drag)
    * @param {function} callBack something to fire after the begin drag has completed
    */
-  beginDrag = (startPosition: XYCoordinate, touchIdentifier?: number, callBack?: () => unknown): void => {
+  beginDrag = (startPosition: number, touchIdentifier?: number, callBack?: () => unknown): void => {
     this.dragPosition = startPosition;
     this.dragPositionOffset = startPosition;
     this.dragTouchIdentifier = touchIdentifier;
@@ -358,15 +329,15 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     if (startPosition && this.knobRef.current && this.dragZoneRef.current) {
       const knobBoundingRect = this.knobRef.current.getBoundingClientRect();
 
-      const maxWidth = knobBoundingRect.width / 2;
-      const maxHeight = knobBoundingRect.height / 2;
-
-      this.dragPositionOffset = {
-        x: round(startPosition.x - knobBoundingRect.left - maxWidth, 2),
-        y: round(startPosition.y - knobBoundingRect.top - maxHeight, 2),
-      };
+      if (this.isVertical) {
+        const maxHeight = knobBoundingRect.height / 2;
+        this.dragPositionOffset = round(startPosition - knobBoundingRect.top - maxHeight, 2);
+      } else {
+        const maxWidth = knobBoundingRect.width / 2;
+        this.dragPositionOffset = round(startPosition - knobBoundingRect.left - maxWidth, 2);
+      }
     } else {
-      this.dragPositionOffset = { x: 0, y: 0 };
+      this.dragPositionOffset = 0;
     }
 
     this.setState({
@@ -383,11 +354,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * Fired by the mouse and touch move events as the user drags the joystick knob
+   * Fired by the mouse and touch move events as the user drags the knob
    *
    * @note: the position coordinate is the global client X/Y position of the mouse cursor / touch event
    */
-  drag = (dragPosition?: XYCoordinate): void => {
+  drag = (dragPosition?: number): void => {
     this.dragPosition = dragPosition;
   }
 
@@ -404,6 +375,8 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     this.setState({
       dragging: false,
     }, () => {
+      this.endUpdating();
+
       if (callBack) {
         callBack();
       }
@@ -422,7 +395,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
       e.stopPropagation();
-      this.drag({ x: e.clientX, y: e.clientY });
+      if (this.isVertical) {
+        this.drag(e.clientY);
+      } else {
+        this.drag(e.clientX);
+      }
     }
   }
 
@@ -442,7 +419,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         if (e.cancelable) {
           e.preventDefault();
         }
-        this.drag({ x: dragTouch.clientX, y: dragTouch.clientY });
+        if (this.isVertical) {
+          this.drag(dragTouch.clientY);
+        } else {
+          this.drag(dragTouch.clientX);
+        }
       }
     }
   }
@@ -471,7 +452,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * Const fired when the mouse is pressed on the joystick
+   * Const fired when the mouse is pressed on the knob
    */
   handleKnobMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
     const { dragging } = this.state;
@@ -481,12 +462,16 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
       e.stopPropagation();
-      this.beginDrag({ x: e.clientX, y: e.clientY });
+      if (this.isVertical) {
+        this.beginDrag(e.clientY);
+      } else {
+        this.beginDrag(e.clientX);
+      }
     }
   }
 
   /**
-   * Mouse up on the joystick knob will end the drag operation
+   * Mouse up on the knob will end the drag operation
    */
   handleKnobMouseUp = (e: MouseEvent | React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
     if (
@@ -509,7 +494,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       e.stopPropagation();
 
       const dragTouch = e.changedTouches[0];
-      this.beginDrag({ x: dragTouch.clientX, y: dragTouch.clientY }, dragTouch.identifier);
+      if (this.isVertical) {
+        this.beginDrag(dragTouch.clientY, dragTouch.identifier);
+      } else {
+        this.beginDrag(dragTouch.clientX, dragTouch.identifier);
+      }
     }
   }
 
@@ -540,32 +529,16 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
 
     return (
       <div
-        className={classNames('joystick', className)}
+        className={classNames(
+          'slider',
+          className, {
+            vertical: this.isVertical,
+            horizontal: this.isHorizontal,
+          },
+        )}
       >
-        {/* This is the diamond shaped clipping path */}
-        <svg
-          className="clip-path-svg"
-        >
-          <clipPath
-            id="joystick_background_clip_path"
-            clipPathUnits="objectBoundingBox"
-          >
-            {/* eslint-disable-next-line max-len */}
-            <path d="M0.964,0.585 l-0.38,0.38 a0.12,0.12,0,0,1,-0.17,0 l-0.38,-0.38 a0.12,0.12,0,0,1,0,-0.17 l0.38,-0.38 a0.12,0.12,0,0,1,0.17,0 l0.38,0.38 A0.12,0.12,0,0,1,0.964,0.585" />
-          </clipPath>
-        </svg>
-
-        {/* The background is the black area behind the joystick */}
+        {/* The background is the black area behind the slider */}
         <div className="background" />
-
-        {/* This is the diamond shape representing the limit */}
-        <svg
-          className="limit-svg"
-          viewBox="0 0 100 100"
-        >
-          {/* eslint-disable-next-line max-len */}
-          <path d="M96.49,58.5l-38,38a12,12,0,0,1-17,0l-38-38a12,12,0,0,1,0-17l38-38a12,12,0,0,1,17,0l38,38A12,12,0,0,1,96.49,58.5Z" />
-        </svg>
 
         {/* Mainly used for calculating the valid range that the knob can be dragged within */}
         <div
@@ -573,7 +546,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
           ref={this.dragZoneRef}
         >
 
-          {/* This is the knob / ball of the joystick */}
+          {/* This is the knob that the user interacts with */}
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div
             className="knob"
@@ -585,7 +558,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
             onTouchEnd={this.handleKnobTouchEnd}
             onDragStart={(e) => e.preventDefault()}
           >
-            <Icon icon={ICON.CONTROL_CAMERA} />
+            <Icon icon={ICON.MENU_HAMBURGER} />
           </div>
         </div>
 

@@ -4,4 +4,4 @@
  *
  * @param dur
  */
-export const wait = (dur: number) => new Promise((res) => setTimeout(res, dur));
+export const wait = (dur: number): Promise<ReturnType<typeof setTimeout>> => new Promise((res) => setTimeout(res, dur));

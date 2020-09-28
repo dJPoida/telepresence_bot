@@ -125,12 +125,12 @@ class SocketServer extends TypedEventEmitter<SocketServerEventPayload> {
   private handleSocketDisconnected(socket: SocketIO.Socket, disconnectReason: any) {
     if (socket.authKey) {
       this.connectedClientCount -= 1;
-      console.log(`Client disconnected: "${disconnectReason}"`, { connectedClientCount: this.connectedClientCount });
+      this.log.info(`Client disconnected: "${disconnectReason}"`, { connectedClientCount: this.connectedClientCount });
 
       // Notify any listeners of this class that a socket has disconnected
       this.emit(SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED, { socket, connectedClientCount: this.connectedClientCount });
     } else {
-      console.log('Unidentified client disconnected');
+      this.log.warn('Unidentified client disconnected');
     }
   }
 

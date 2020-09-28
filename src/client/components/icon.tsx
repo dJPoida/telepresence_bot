@@ -1,7 +1,8 @@
 import React from 'react';
+import { AN_ICON } from '../const/icon.constant';
 
 export type IconProps = {
-  icon: string,
+  icon: AN_ICON,
 };
 
 export const Icon:React.FC<IconProps> = ({ icon }) => (

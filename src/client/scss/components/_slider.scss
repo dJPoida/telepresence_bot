@@ -1,0 +1,66 @@
+.slider {
+  position: relative;
+  
+  &.vertical {
+    width: 4em;
+    height: 100%;
+  }
+  
+  &.horizontal {
+    width: 100%;
+    height: 4em;
+  }
+  
+  --slider-padding: var(--universal-padding);
+  
+  .background {
+    position: absolute;
+    left: var(--slider-padding);
+    top: var(--slider-padding);
+    right: var(--slider-padding);
+    bottom: var(--slider-padding);
+    background: $black;
+    background: linear-gradient(90deg, lighten($black, 25%) 25%, $black 50%, lighten($black, 25%) 75%);
+    border-radius: 1em;
+    border: 2px solid $border-color;
+    pointer-events: none;
+  }
+
+  .drag-zone {
+    position: absolute;
+    display: block;
+    // background: green;
+    top: 1.5em;
+    left: 1.5em;
+    right: 1.5em;
+    bottom: 1.5em; 
+    pointer-events: none;
+
+    .knob { 
+      --offsetX: 0;
+      --offsetY: 0;
+      position: absolute;
+      display: block;
+      cursor: pointer;
+      background: $light-background-color;
+      top: var(--offsetY);
+      left: 50%;
+      width: 3em;
+      height: 2em;
+      border-radius: 0.75em;
+      border: 1px solid $border-color;
+      user-select: none;
+      transform: translate(-50%, -50%);
+      pointer-events: all;
+
+      i.tbp-icon {
+        position: absolute;
+        color: lighten($light-background-color, 15%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em; 
+      }
+    }
+  }
+}

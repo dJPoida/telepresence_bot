@@ -33,40 +33,43 @@
     background: radial-gradient(circle, $black 0%, lighten($black, 25%) 80%);
     -webkit-clip-path: url(#joystick_background_clip_path);
     clip-path: url(#joystick_background_clip_path);
+    pointer-events: none;
   }
 
   .drag-zone {
     position: absolute;
     display: block;
+    top: 20%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
     pointer-events: none;
-    top: 15%;
-    left: 15%;
-    width: 70%;
-    height: 70%;
-  }
 
-  .knob { 
-    --offsetX: 0;
-    --offsetY: 0;
-    position: absolute;
-    display: block;
-    cursor: pointer;
-    background: $light-background-color;
-    top: calc(30% + (var(--offsetY) / 4));
-    left: calc(30% + (var(--offsetX) / 4));
-    width: 40%;
-    height: 40%;
-    border-radius: 50%;
-    border: 1px solid $border-color;
-    user-select: none;
-
-    i.tbp-icon {
+    .knob { 
+      --offsetX: 0;
+      --offsetY: 0;
       position: absolute;
-      color: lighten($light-background-color, 15%);
-      top: 50%;
-      left: 50%;
+      display: block;
+      cursor: pointer;
+      background: $light-background-color;
+      top: calc(50% + var(--offsetY) / 2);
+      left: calc(50% + var(--offsetX) / 2);
+      width: 70%;
+      height: 70%;
+      border-radius: 50%;
+      border: 1px solid $border-color;
+      user-select: none;
       transform: translate(-50%, -50%);
-      font-size: 3em; 
+      pointer-events: all;
+
+      i.tbp-icon {
+        position: absolute;
+        color: lighten($light-background-color, 15%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em; 
+      }
     }
   }
 }
