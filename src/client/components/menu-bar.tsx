@@ -5,22 +5,24 @@ import { Icon } from './icon';
 import { ICON } from '../const/icon.constant';
 import { SocketContext } from '../providers/socket.provider';
 import { StatusIndicator } from './status-indicator';
+import { SettingsModal } from './modals/settings.modal';
 
 export type MenuBarProps = {
   className?: string,
 };
 
 export const MenuBar: React.FC<MenuBarProps> = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
   const { connected } = useContext(SocketContext);
 
   return (
     <div className="menu-bar">
       <div className="menu-button-wrapper">
         <Button
-          active={menuOpen}
+          active={isSettingsModalOpen}
           className="primary"
           square
+          onClick={() => { setSettingsModalOpen(!isSettingsModalOpen); }}
         >
           <Icon icon={ICON.MENU_HAMBURGER} />
         </Button>
@@ -41,6 +43,12 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
           }}
         />
       </div>
+      {isSettingsModalOpen && (
+        <SettingsModal
+          visible={isSettingsModalOpen}
+          onCloseRequest={() => setSettingsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ $active-darken-amount: 15%;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: $font-family;
   font-size: 2rem;
   border-radius: var(--border-radius);
   cursor: pointer;

@@ -19,8 +19,6 @@ export const TelemetryContext = createContext<TelemetryContext>(null as any);
 /**
  * @description
  * Basically wraps the socket in some state management for the control inputs
- *
- * @param param0
  */
 export const TelemetryProvider: React.FC = function TelemetryProvider({ children }) {
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });

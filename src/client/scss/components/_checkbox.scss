@@ -1,0 +1,9 @@
+.tpb-checkbox {
+  display: flex;
+  align-items: center;
+  
+  input[type="checkbox"] {
+    width: 1.5em !important;
+    height: 1.5em !important;
+  }
+}

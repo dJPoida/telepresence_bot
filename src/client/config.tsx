@@ -4,4 +4,4 @@ import { ConfigPage } from './pages/config.page';
 
 import './scss/style.scss';
 
-ReactDOM.render(<ConfigPage />, document.getElementById('app'));
+ReactDOM.render(<ConfigPage />, document.getElementById('app_root'));

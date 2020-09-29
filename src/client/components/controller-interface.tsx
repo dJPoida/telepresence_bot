@@ -1,17 +1,24 @@
 import React, { useContext } from 'react';
 import { ORIENTATION } from '../const/orientation.constant';
+import { LocalSettingsContext } from '../providers/local-settings.provider';
 import { TelemetryContext } from '../providers/telemetry.provider';
 import { Joystick } from './joystick';
 import { MenuBar } from './menu-bar';
 import { Slider } from './slider';
+import { StatsOverlay } from './stats-overlay';
 
 export const ControllerInterface: React.FC = () => {
   const telemetry = useContext(TelemetryContext);
+  const localSettings = useContext(LocalSettingsContext);
 
   return (
     <div className="control-panel">
 
       <MenuBar />
+
+      {localSettings.showStatsOverlay && (
+        <StatsOverlay />
+      )}
 
       <div className="controls-wrapper">
         <div className="controls left">

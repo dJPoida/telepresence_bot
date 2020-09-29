@@ -6,6 +6,8 @@ export type ButtonProps = {
   active?: boolean,
   disabled?: boolean,
   square?: boolean,
+
+  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
 };
 
 export const Button:React.FC<ButtonProps> = ({
@@ -14,6 +16,7 @@ export const Button:React.FC<ButtonProps> = ({
   className,
   disabled,
   square,
+  onClick,
 }) => (
   <button
     type="button"
@@ -26,6 +29,7 @@ export const Button:React.FC<ButtonProps> = ({
       },
     )}
     disabled={disabled}
+    onClick={onClick}
   >
     {children}
   </button>

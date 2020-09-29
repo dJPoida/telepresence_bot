@@ -4,4 +4,4 @@ import { DisplayPage } from './pages/display.page';
 
 import './scss/style.scss';
 
-ReactDOM.render(<DisplayPage />, document.getElementById('app'));
+ReactDOM.render(<DisplayPage />, document.getElementById('app_root'));

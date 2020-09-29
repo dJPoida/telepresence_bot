@@ -1,0 +1,29 @@
+.stats-overlay {
+  position: absolute;
+  color: $white;
+  top: 6rem;
+  left: 0;
+  right: 0;
+  padding: 1em;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: max-content auto;
+  grid-template-rows: max-content;
+  column-gap: 0.5em;
+  font-size: 0.75em;
+
+  .key {
+    text-align: right;
+  }
+  
+  .section-header {
+    grid-column: span 2;
+
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 0.5em;
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+}
