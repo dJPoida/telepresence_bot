@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import socketIoClient from 'socket.io-client';
-import { ClientCommand } from '../../shared/constants/client-command.const';
+import { ClientCommandPayload } from '../../shared/constants/client-command.const';
 import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
 import { SOCKET_CLIENT_TYPE } from '../../shared/constants/socket-client-type.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
@@ -8,7 +8,7 @@ import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.
 import { global } from '../const/global.constant';
 
 type SocketContext = {
-  sendCommand: (payload: ClientCommand) => any,
+  sendCommand: (payload: ClientCommandPayload) => any,
   connected: boolean,
   ws: SocketIOClient.Socket;
 };
@@ -28,17 +28,17 @@ const ws = socketIoClient(
 
 /**
  * @description
- * Provides network access to the auth service
+ * Provides access to the web socket for transmitting and receiving data from the server
  *
  * @param param0
  */
 export const SocketProvider: React.FC = function SocketProvider({ children }) {
   const [connected, setConnected] = useState<SocketContext['connected']>(false);
 
-  const sendCommand = useCallback(function sendCommand(payload: ClientCommand) {
-    console.log('[sendCommand]', payload);
+  const sendCommand = useCallback(function sendCommand(payload: ClientCommandPayload) {
+    // console.log('[sendCommand]', payload);
     if (!connected) {
-      console.log('[sendCommand]', 'Unable to send command: not connected', payload);
+      console.error('[sendCommand]', 'Unable to send command: not connected', payload);
     } else {
       ws.emit(SOCKET_CLIENT_MESSAGE.COMMAND, payload);
     }
@@ -63,7 +63,6 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
      * Respond to a successful Authorization
      */
     function handleAuthorized() {
-      console.log('[handleAuthorized] Connected => true');
       setConnected(true);
     }
 
@@ -71,7 +70,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
      * Respond to a Failed Authorization
      */
     function handleUnauthorized(reason: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]) {
-      console.log(`[handleUnauthorized] ${reason}`);
+      console.error(`Unauthorized: ${reason}`);
 
       // If the authorisation fails - reload the page. This should trigger a login page load
       setTimeout(() => {
@@ -83,21 +82,19 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
      * Respond to a challenge for authorization
      */
     function handleChallenge() {
-      console.log('[handleChallenge] - sending challenge response');
-
       // TODO: Implement proper auth
-      const authToken = ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
+      ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
         key: global.CLIENT_KEY,
       });
     }
 
     // bindings
     function handleConnection() {
-      console.log('[handleConnection] Awaiting auth challenge...');
+      // NOOP
     }
 
     function handleDisconnection(reason: string) {
-      console.log(`[handleDisconnection]: ${reason}`);
+      console.warn(`Connection to the server has been lost: ${reason}`);
       setConnected(false);
 
       // if the server booted us - let's attempt to re-connect
@@ -107,7 +104,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
     }
 
     function handleConnectTimeout() {
-      console.log('[handleConnectTimeout]: Connection attempt timed out.');
+      console.warn('Connection attempt timed out.');
       setConnected(false);
 
       // If the socket cannot connect to the server - reload the page so that the browser updates (i.e. leaves the )
@@ -129,13 +126,14 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
 
     // destroy listeners on un-mount
     return () => {
-      ws.disconnect();
       ws.off('connect', handleConnection);
       ws.off('disconnect', handleDisconnection);
       ws.off('connect_timeout', handleConnectTimeout);
       ws.off(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
       ws.off(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
       ws.off(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
+
+      ws.disconnect();
     };
   }, []);
 

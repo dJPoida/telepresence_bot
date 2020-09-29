@@ -1,9 +1,7 @@
 import React from 'react';
 
-export const DisplayPage = () => {
-    return (
-        <div>
-            Index Page Working
-        </div>
-    )
-}
+export const DisplayPage:React.FC = () => (
+  <div>
+    TODO: Display Page
+  </div>
+);

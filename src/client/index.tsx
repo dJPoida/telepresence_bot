@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { IndexPage } from './pages/index.page';
+import { ControllerPage } from './pages/controller.page';
 
 import './scss/style.scss';
 
-ReactDOM.render(<IndexPage />, document.getElementById('app'));
+ReactDOM.render(<ControllerPage />, document.getElementById('app'));

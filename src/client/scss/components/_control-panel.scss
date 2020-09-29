@@ -22,11 +22,11 @@
       display: flex;
       
       &.left {
-        border-top-right-radius: 5vmin;
+        border-top-right-radius: 1rem;
       }
       
       &.right {
-        border-top-left-radius: 5vmin;
+        border-top-left-radius: 1rem;
       }
 
       .joystick-wrapper {

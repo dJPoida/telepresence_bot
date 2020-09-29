@@ -38,6 +38,7 @@ export function applyWebpackDevelopmentMiddleware(
     watchContentBase: true,
     methods: [],
     logLevel: 'warn',
+    clientLogLevel: 'silent',
   }));
 
   // Assume the first time that the server is run that the webpack bundle is not available
@@ -67,9 +68,9 @@ export function applyWebpackDevelopmentMiddleware(
   // eslint-disable-next-line import/no-extraneous-dependencies, node/no-unpublished-require, global-require, @typescript-eslint/no-var-requires
   expressApp.use(require('webpack-hot-middleware')(
     compiler, {
-      log: console.log,
       path: '/__webpack_hmr',
       heartbeat: 2 * 1000,
+      quiet: true,
     },
   ));
 

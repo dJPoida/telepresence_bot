@@ -12,6 +12,7 @@ export type JoystickProps = {
   repeatRate?: number,
   limit?: number,
   springBack?: boolean,
+  value: XYCoordinate,
   verboseUpdate?: boolean,
   onBeginUpdating?: () => void,
   onUpdate?: (position: XYCoordinate) => void,
@@ -64,6 +65,9 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   componentDidUpdate(prevProps: JoystickProps, prevState: JoystickState): void {
     // TODO: handle a change to props.disabled if the user is interacting with the joystick
     // TODO: handle a change to props.refreshRate if the user is interacting with the joystick
+
+    // When the incoming value changes, update our internal value if the user is not interacting with the knob.
+    this.doInternalUpdate();
   }
 
   /**
@@ -167,6 +171,8 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       dragging,
     } = this.state;
 
+    const { value } = this.props;
+
     // Recalculate the position based on all of the inputs
     if (dragging && this.dragPosition && this.dragPositionOffset && this.dragZoneRef.current && this.knobRef.current) {
       const dragZoneBoundingRect = this.dragZoneRef.current.getBoundingClientRect();
@@ -183,34 +189,33 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         x: Math.max(Math.min(offsetDragPosition.x / (maxWidth * 2), 1), -1) * 100,
         y: Math.max(Math.min(offsetDragPosition.y / (maxHeight * 2), 1), -1) * 100,
       };
-
-      // apply the offset drag position to the internal position and constrain the values
-      // this.internalPosition = {
-      //   x: (Math.max(Math.min(offsetDragPosition.x / (dragZoneBoundingRect.width / 2), 1), -1) * 100),
-      //   y: (Math.max(Math.min(offsetDragPosition.y / (dragZoneBoundingRect.height / 2), 1), -1) * 100),
-      // };
-      // console.log(this.internalPosition);
-
-      // this.internalPosition = {
-      //   x: ((Math.max(Math.min(knobPosition.x - dragZoneBoundingRect.left, maxWidth), -maxWidth) / maxWidth) * 100),
-      //   y: ((Math.max(Math.min(knobPosition.y - dragZoneBoundingRect.top, maxHeight), -maxHeight) / maxHeight) * 100),
-      // };
     }
 
     // Attempt to spring back to the center
-    else if (this.springBack && (Math.abs(this.internalPosition.x) > SPRING_MIN_THRESHOLD || Math.abs(this.internalPosition.y) > SPRING_MIN_THRESHOLD)) {
-      this.internalPosition = {
-        x: this.internalPosition.x * SPRING_COEFFICIENT,
-        y: this.internalPosition.y * SPRING_COEFFICIENT,
-      };
-    }
+    else if (this.springBack) {
+      if (
+        (Math.abs(this.internalPosition.x) > SPRING_MIN_THRESHOLD)
+        || (Math.abs(this.internalPosition.y) > SPRING_MIN_THRESHOLD)
+      ) {
+        this.internalPosition = {
+          x: this.internalPosition.x * SPRING_COEFFICIENT,
+          y: this.internalPosition.y * SPRING_COEFFICIENT,
+        };
+      }
 
-    // reset to zero if below the spring threshold
-    else if (this.springBack && (Math.abs(this.internalPosition.x) < SPRING_MIN_THRESHOLD && Math.abs(this.internalPosition.y) < SPRING_MIN_THRESHOLD)) {
-      this.internalPosition = {
-        x: 0,
-        y: 0,
-      };
+      // reset to zero if below the spring threshold
+      else if (
+        (Math.abs(this.internalPosition.x) < SPRING_MIN_THRESHOLD)
+        && (Math.abs(this.internalPosition.y) < SPRING_MIN_THRESHOLD)
+      ) {
+        this.internalPosition = {
+          x: 0,
+          y: 0,
+        };
+        this.endUpdating();
+      }
+    } else {
+      this.internalPosition = value;
       this.endUpdating();
     }
   }
@@ -310,35 +315,41 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
+   * Take the internal position and apply it to the knob to keep it up to date
+   * (since the knob is also rendered outside of the render loop)
+   */
+  applyKnobCSS = (): void => {
+    if (this.knobRef.current) {
+      this.knobRef.current.setAttribute('style', this.knobTransformCSSString);
+    }
+  }
+
+  /**
    * Begin requesting animation frames to update the joystick
    */
   startAnimating = (): void => {
     const getStateValues = () => {
-      const { knobRef, knobTransformCSSString, doInternalUpdate } = this;
+      const { doInternalUpdate, applyKnobCSS } = this;
       const { updating } = this.state;
       return {
-        knobRef,
-        knobTransformCSSString,
         updating,
         doInternalUpdate,
+        applyKnobCSS,
       };
     };
 
-    requestAnimationFrame(function animate(time) {
+    requestAnimationFrame(function animate() {
       const {
-        knobRef,
-        knobTransformCSSString,
         updating,
         doInternalUpdate,
+        applyKnobCSS,
       } = getStateValues();
-
-      if (knobRef.current) {
-        knobRef.current.setAttribute('style', knobTransformCSSString);
-      }
 
       if (updating) {
         doInternalUpdate();
         requestAnimationFrame(animate);
+      } else {
+        applyKnobCSS();
       }
     });
   }

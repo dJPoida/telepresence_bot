@@ -12,6 +12,7 @@ export type SliderProps = {
   disabled?: boolean,
   repeatRate?: number,
   verboseUpdate?: boolean,
+  value: number,
   onBeginUpdating?: () => void,
   onUpdate?: (position: number) => void,
   onEndUpdating?: () => void,
@@ -50,6 +51,7 @@ export class Slider extends React.Component<SliderProps, SliderState> {
       dragging: false,
     };
 
+    this.internalPosition = props.value;
     this.updateInterval = null;
     this.knobRef = createRef();
     this.dragZoneRef = createRef();
@@ -61,6 +63,9 @@ export class Slider extends React.Component<SliderProps, SliderState> {
   componentDidUpdate(prevProps: SliderProps, prevState: SliderState): void {
     // TODO: handle a change to props.disabled if the user is interacting with the slider
     // TODO: handle a change to props.refreshRate if the user is interacting with the slider
+
+    // When the incoming value changes, update our internal value if the user is not interacting with the knob.
+    this.doInternalUpdate();
   }
 
   /**
@@ -184,7 +189,12 @@ export class Slider extends React.Component<SliderProps, SliderState> {
       this.internalPosition = this.isVertical
         ? Math.max(Math.min(offsetDragPosition / maxHeight, 1), 0) * 100
         : Math.max(Math.min(offsetDragPosition / maxWidth, 1), 0) * 100;
+    } else {
+      const { value } = this.props;
+      this.internalPosition = value;
     }
+
+    this.applyKnobCSS();
   }
 
   /**
@@ -281,35 +291,41 @@ export class Slider extends React.Component<SliderProps, SliderState> {
   }
 
   /**
+   * Take the internal position and apply it to the knob to keep it up to date
+   * (since the knob is also rendered outside of the render loop)
+   */
+  applyKnobCSS = (): void => {
+    if (this.knobRef.current) {
+      this.knobRef.current.setAttribute('style', this.knobTransformCSSString);
+    }
+  }
+
+  /**
    * Begin requesting animation frames to update the slider
    */
   startAnimating = (): void => {
     const getStateValues = () => {
-      const { knobRef, knobTransformCSSString, doInternalUpdate } = this;
+      const { doInternalUpdate, applyKnobCSS } = this;
       const { updating } = this.state;
       return {
-        knobRef,
-        knobTransformCSSString,
         updating,
         doInternalUpdate,
+        applyKnobCSS,
       };
     };
 
-    requestAnimationFrame(function animate(time) {
+    requestAnimationFrame(function animate() {
       const {
-        knobRef,
-        knobTransformCSSString,
         updating,
         doInternalUpdate,
+        applyKnobCSS,
       } = getStateValues();
-
-      if (knobRef.current) {
-        knobRef.current.setAttribute('style', knobTransformCSSString);
-      }
 
       if (updating) {
         doInternalUpdate();
         requestAnimationFrame(animate);
+      } else {
+        applyKnobCSS();
       }
     });
   }

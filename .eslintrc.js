@@ -1,8 +1,10 @@
 module.exports = {
   extends: [
     'airbnb',
-    'plugin:@typescript-eslint/recommended',
     'plugin:node/recommended',
+    'plugin:react/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
     'prettier/@typescript-eslint',
   ],
   parser: '@typescript-eslint/parser',
@@ -10,6 +12,8 @@ module.exports = {
     '@typescript-eslint',
     'node',
     'prettier',
+    'react',
+    'react-hooks',
   ],
   env: {
     browser: true,
@@ -55,6 +59,7 @@ module.exports = {
     '@typescript-eslint/camelcase': 'off',
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': ['error', { variables: false }],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
     'import/extensions': [
       'error',
       'ignorePackages',
@@ -65,7 +70,7 @@ module.exports = {
         tsx: 'never',
       },
     ],
-    'import/no-extraneous-dependencies': [2, { devDependencies: ['**/test.tsx', '**/test.ts'] }],
+    // 'import/no-extraneous-dependencies': [2, { devDependencies: ['**/test.tsx', '**/test.ts'] }],
     'import/prefer-default-export': 'off',
     'node/no-unsupported-features/es-syntax': [
       'error',

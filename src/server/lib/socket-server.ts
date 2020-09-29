@@ -1,9 +1,9 @@
 import { env } from 'process';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
-import { SocketServerEventPayload, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
+import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
 import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
-import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
+import { A_SOCKET_SERVER_MESSAGE, SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
 
 let socketServerInstance: null | SocketServer = null;
@@ -15,7 +15,7 @@ let socketServerInstance: null | SocketServer = null;
  * Controls the sending and receiving of information from and to the connected clients
  * over sockets
  */
-class SocketServer extends TypedEventEmitter<SocketServerEventPayload> {
+class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   protected readonly log = classLoggerFactory(this);
 
   private _io: SocketIO.Server | null = null;
@@ -109,7 +109,7 @@ class SocketServer extends TypedEventEmitter<SocketServerEventPayload> {
     socket.on('error', this.handleSocketClientError.bind(this));
     socket.on(SOCKET_CLIENT_MESSAGE.COMMAND, (payload) => this.emitImmediate(
       SOCKET_SERVER_EVENT.CLIENT_COMMAND,
-      { socket, payload },
+      { socket, command: payload },
     ));
 
     // Let the socket know they've been authenticated
@@ -161,17 +161,60 @@ class SocketServer extends TypedEventEmitter<SocketServerEventPayload> {
   /**
    * Send a message to a specific socket or to everyone
    */
-  sendStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']], socket?: SocketIO.Socket) {
-    const self = this;
-
+  sendBotStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']], socket?: SocketIO.Socket) {
     // Emit to a specific socket
     if (socket) {
-      socket.emit(SOCKET_SERVER_MESSAGE.STATUS, payload);
+      socket.emit(SOCKET_SERVER_MESSAGE.BOT_STATUS, payload);
     }
 
     // Emit to everyone
     else {
-      self.io.emit(SOCKET_SERVER_MESSAGE.STATUS, payload);
+      this.io.emit(SOCKET_SERVER_MESSAGE.BOT_STATUS, payload);
+    }
+  }
+
+  /**
+   * Send a Drive Input status update to a specific socket or to everyone
+   */
+  sendDriveInputStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, payload);
+    }
+  }
+
+  /**
+   * Send a Pan/Tilt Input status update to a specific socket or to everyone
+   */
+  sendPanTiltInputStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, payload);
+    }
+  }
+
+  /**
+   * Send a Speed Input status update to a specific socket or to everyone
+   */
+  sendSpeedInputStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, payload);
     }
   }
 }

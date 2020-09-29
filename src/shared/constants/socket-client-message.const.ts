@@ -1,4 +1,4 @@
-import { ClientCommand } from "./client-command.const";
+import { ClientCommandPayload } from './client-command.const';
 
 /**
  * @description
@@ -18,7 +18,7 @@ export type A_SOCKET_CLIENT_MESSAGE = SOCKET_CLIENT_MESSAGE[keyof SOCKET_CLIENT_
  * @description
  * Payload map from the Socket Client messages
  */
-export interface ClientSocketMessagePayload {
+export interface ClientSocketMessageMap {
   [SOCKET_CLIENT_MESSAGE.AUTH]: { key: string };
-  [SOCKET_CLIENT_MESSAGE.COMMAND]: ClientCommand;
+  [SOCKET_CLIENT_MESSAGE.COMMAND]: ClientCommandPayload;
 }

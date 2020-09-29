@@ -1,7 +1,8 @@
 // import { LogSummary } from '../browser-server-types/log.summary.type';
 
+import { BotStatusDto } from '../types/bot-status.dto.type';
+
 /**
- * @description
  * Messages sent by the socket server
  */
 export const SOCKET_SERVER_MESSAGE = {
@@ -11,7 +12,10 @@ export const SOCKET_SERVER_MESSAGE = {
   UNAUTHORIZED: 'unauthorized',
 
   // Status
-  STATUS: 'status',
+  BOT_STATUS: 'stat',
+  DRIVE_INPUT_STATUS: 'dis',
+  PAN_TILT_INPUT_STATUS: 'ptis',
+  SPEED_INPUT_STATUS: 'sis',
 
   // Info
   // LOG: 'log', // TODO:
@@ -27,8 +31,11 @@ export interface SocketServerMessageMap {
   [SOCKET_SERVER_MESSAGE.CHALLENGE]: undefined;
   [SOCKET_SERVER_MESSAGE.AUTHORIZED]: undefined;
   [SOCKET_SERVER_MESSAGE.UNAUTHORIZED]: { reason: string };
-  
-  [SOCKET_SERVER_MESSAGE.STATUS]: { online: true }; // TODO: convert this to a dto
+
+  [SOCKET_SERVER_MESSAGE.BOT_STATUS]: BotStatusDto;
+  [SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS]: Pick<BotStatusDto, 'drive'>;
+  [SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS]: Pick<BotStatusDto, 'panTilt'>;
+  [SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS]: Pick<BotStatusDto, 'speed'>;
 
   // [SOCKET_SERVER_MESSAGE.LOG]: { logSummary: LogSummary };
 }

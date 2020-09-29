@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import classNames from 'classnames';
 import { Button } from './button';
 import { Icon } from './icon';
 import { ICON } from '../const/icon.constant';
@@ -26,6 +27,9 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
       </div>
       <div className="status-indicator-wrapper">
         <StatusIndicator
+          className={classNames({
+            danger: !connected,
+          })}
           value={connected.toString()}
           items={{
             false: 'disconnected',

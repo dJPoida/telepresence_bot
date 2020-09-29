@@ -18,7 +18,7 @@ export type LEDColors = {
   left: number
 };
 
-export class LEDStrip extends TypedEventEmitter<LEDStripEventPayload> {
+export class LEDStripDriver extends TypedEventEmitter<LEDStripEventPayload> {
   private readonly device: Ws281x = ws281x;
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;

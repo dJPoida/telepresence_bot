@@ -6,7 +6,7 @@
  *
  * @param cookieName
  */
-export function getCookie(cookieName: string) {
+export function getCookie(cookieName: string): string {
   const name = `${cookieName}=`;
   const decodedCookie = decodeURIComponent(document.cookie);
   const ca = decodedCookie.split(';');

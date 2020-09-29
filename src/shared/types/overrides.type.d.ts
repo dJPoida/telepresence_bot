@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/adjacent-overload-signatures */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ClientSocketMessagePayload, SOCKET_CLIENT_MESSAGE } from '../constants/socket-client-message.const';
+import { ClientSocketMessageMap, SOCKET_CLIENT_MESSAGE } from '../constants/socket-client-message.const';
 import { A_SOCKET_CLIENT_TYPE } from '../constants/socket-client-type.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../constants/socket-server-message.const';
 import { Listener } from './listener.type';
@@ -30,8 +30,8 @@ declare global {
       once(event: 'error', listener: Listener<Error | any>): any;
 
       // CLIENT -> SERVER
-      emit(event: SOCKET_CLIENT_MESSAGE['AUTH'], payload?: ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['AUTH']]): any;
-      emit(event: SOCKET_CLIENT_MESSAGE['COMMAND'], payload?: ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['COMMAND']]): any;
+      emit(event: SOCKET_CLIENT_MESSAGE['AUTH'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]): any;
+      emit(event: SOCKET_CLIENT_MESSAGE['COMMAND'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]): any;
 
       // SERVER -> CLIENT
       on(event: SOCKET_SERVER_MESSAGE['CHALLENGE'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CHALLENGE']]>): any;
@@ -46,9 +46,21 @@ declare global {
       once(event: SOCKET_SERVER_MESSAGE['UNAUTHORIZED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['UNAUTHORIZED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]>): any;
 
-      on(event: SOCKET_SERVER_MESSAGE['STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]>): any;
-      once(event: SOCKET_SERVER_MESSAGE['STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]>): any;
-      addEventListener(event: SOCKET_SERVER_MESSAGE['STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]>): any;
+      on(event: SOCKET_SERVER_MESSAGE['BOT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['BOT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['BOT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
     }
   }
 
@@ -69,16 +81,19 @@ declare global {
       emit(event: SOCKET_SERVER_MESSAGE['CHALLENGE'], payload?: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CHALLENGE']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['AUTHORIZED'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['AUTHORIZED']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['UNAUTHORIZED'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]): any;
-      emit(event: SOCKET_SERVER_MESSAGE['STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['BOT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]): any;
 
       // CLIENT -> SERVER
-      on(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
-      once(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
-      addEventListener(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
+      on(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
+      once(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
+      addEventListener(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
 
-      on(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
-      once(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
-      addEventListener(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessagePayload[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
+      on(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
+      once(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
+      addEventListener(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ClientCommand } from '../../shared/constants/client-command.const';
+import { ClientCommandPayload } from '../../shared/constants/client-command.const';
 
 /**
  * Event Names
@@ -15,9 +15,9 @@ export type A_SOCKET_SERVER_EVENT = SOCKET_SERVER_EVENT[keyof SOCKET_SERVER_EVEN
 /**
  * Event Payloads
  */
-export interface SocketServerEventPayload {
+export interface SocketServerEventMap {
   [SOCKET_SERVER_EVENT.INITIALISED]: undefined;
   [SOCKET_SERVER_EVENT.CLIENT_CONNECTED]: { socket: SocketIO.Socket, connectedClientCount: number };
   [SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED]: { socket: SocketIO.Socket, connectedClientCount: number };
-  [SOCKET_SERVER_EVENT.CLIENT_COMMAND]: { socket: SocketIO.Socket, payload: ClientCommand };
+  [SOCKET_SERVER_EVENT.CLIENT_COMMAND]: { socket: SocketIO.Socket, command: ClientCommandPayload };
 }
