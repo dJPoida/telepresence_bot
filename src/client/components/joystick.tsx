@@ -14,6 +14,7 @@ export type JoystickProps = {
   springBack?: boolean,
   value: XYCoordinate,
   verboseUpdate?: boolean,
+  invertY?: boolean,
   onBeginUpdating?: () => void,
   onUpdate?: (position: XYCoordinate) => void,
   onEndUpdating?: () => void,
@@ -171,7 +172,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       dragging,
     } = this.state;
 
-    const { value } = this.props;
+    const { value, invertY } = this.props;
 
     // Recalculate the position based on all of the inputs
     if (dragging && this.dragPosition && this.dragPositionOffset && this.dragZoneRef.current && this.knobRef.current) {
@@ -215,7 +216,14 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         this.endUpdating();
       }
     } else {
-      this.internalPosition = value;
+      if (invertY) {
+        this.internalPosition = {
+          x: value.x,
+          y: value.y * -1,
+        };
+      } else {
+        this.internalPosition = value;
+      }
       this.endUpdating();
     }
   }
@@ -224,13 +232,18 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * Called by the updateInterval
    */
   doUpdate = (): void => {
-    const { onUpdate } = this.props;
+    const { invertY, onUpdate } = this.props;
 
     // Snap the position to the nearest integer
     const snappedPosition = {
       x: this.internalPosition.x <= 0 ? Math.ceil(this.internalPosition.x) : Math.floor(this.internalPosition.x),
       y: this.internalPosition.y <= 0 ? Math.ceil(this.internalPosition.y) : Math.floor(this.internalPosition.y),
     };
+
+    // Invert the Y axis?
+    if (invertY) {
+      snappedPosition.y *= -1;
+    }
 
     // Check to see if the position has changed in any way
     const positionChanged = this.position.x !== snappedPosition.x || this.position.y !== snappedPosition.y;
@@ -427,8 +440,10 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    */
   handleWindowMouseMove = (e: MouseEvent): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
     if (
       dragging
+      && !disabled
       && (this.dragTouchIdentifier === undefined)
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
@@ -441,11 +456,10 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * Handle the movement of a touch over the entire document
    */
   handleWindowTouchMove = (e: TouchEvent): void => {
-    const {
-      dragging,
-    } = this.state;
+    const { dragging } = this.state;
+    const { disabled } = this.props;
 
-    if (dragging && (this.dragTouchIdentifier !== undefined)) {
+    if (dragging && !disabled && (this.dragTouchIdentifier !== undefined)) {
       const dragTouch = findTouchFromTouchIdentifier(e.changedTouches, this.dragTouchIdentifier);
 
       if (dragTouch) {
@@ -486,9 +500,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    */
   handleKnobMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
 
     if (
-      !dragging
+      !disabled
+      && !dragging
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
       e.stopPropagation();
@@ -514,9 +530,10 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    */
   handleKnobTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
 
     // Start a drag and / or pinch operation?
-    if (!dragging && e.changedTouches.length > 0) {
+    if (!disabled && !dragging && e.changedTouches.length > 0) {
       e.stopPropagation();
 
       const dragTouch = e.changedTouches[0];
@@ -547,11 +564,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * @inheritdoc
    */
   render(): ReactNode {
-    const { className } = this.props;
+    const { className, disabled } = this.props;
 
     return (
       <div
-        className={classNames('joystick', className)}
+        className={classNames('joystick', className, { disabled })}
       >
         {/* This is the diamond shaped clipping path */}
         <svg

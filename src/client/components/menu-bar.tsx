@@ -13,7 +13,7 @@ export type MenuBarProps = {
 
 export const MenuBar: React.FC<MenuBarProps> = () => {
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
-  const { connected } = useContext(SocketContext);
+  const { connected, latency } = useContext(SocketContext);
 
   return (
     <div className="menu-bar">
@@ -41,6 +41,7 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
             false: ICON.WIFI_OFF,
             true: ICON.WIFI,
           }}
+          displayValue={latency === null ? undefined : `${latency} ms`}
         />
       </div>
       {isSettingsModalOpen && (

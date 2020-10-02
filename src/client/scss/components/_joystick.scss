@@ -3,7 +3,8 @@
   width: 100%;
   height: 100%;
   --joystick-padding: var(--universal-padding);
-  
+
+ 
   svg.clip-path-svg {
     position: absolute;
     width: 0; 
@@ -69,6 +70,14 @@
         left: 50%;
         transform: translate(-50%, -50%);
         font-size: 2em; 
+      }
+    }
+  }
+
+  &.disabled {
+    .drag-zone {
+      .knob {
+        cursor: default;
       }
     }
   }

@@ -8,6 +8,7 @@ export type StatusIndicatorProps<T extends string | number | symbol> = {
   value: T,
   items: Record<T, string>,
   icons: Record<T, AN_ICON>,
+  displayValue?: string,
 };
 
 export const StatusIndicator = <T extends string | number | symbol, >(props: StatusIndicatorProps<T>): ReactElement => {
@@ -16,6 +17,7 @@ export const StatusIndicator = <T extends string | number | symbol, >(props: Sta
     value,
     icons,
     items,
+    displayValue,
   } = props;
 
   return (
@@ -25,8 +27,11 @@ export const StatusIndicator = <T extends string | number | symbol, >(props: Sta
       {icons[value] && (
         <Icon icon={icons[value]} />
       )}
-      {items[value] && (
+      {displayValue === undefined && items[value] && (
         <span>{items[value]}</span>
+      )}
+      {displayValue !== undefined && (
+        <span>{displayValue}</span>
       )}
     </div>
   );

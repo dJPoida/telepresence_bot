@@ -63,4 +63,12 @@
       }
     }
   }
+
+  &.disabled {
+    .drag-zone {
+      .knob {
+        cursor: default;
+      }
+    }
+  }
 }

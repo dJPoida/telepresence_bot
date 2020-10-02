@@ -12,7 +12,6 @@ import { InputManager } from './input-manager';
 import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
 import { BotStatusDto } from '../../shared/types/bot-status.dto.type';
 import { InputManagerEventMap, INPUT_MANAGER_EVENT } from '../const/input-manager-event.const';
-import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 
 export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   protected readonly log = classLoggerFactory(this);
@@ -63,7 +62,9 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
     // Initialise the LED Strip Driver
     this.ledStripDriver.initialise();
 
-    socketServer.initialise(socketIo(this.httpServer));
+    socketServer.initialise(socketIo(this.httpServer, {
+      pingInterval: env.PING_INTERVAL,
+    }));
 
     // TODO: Initializing stuff
 

@@ -36,6 +36,7 @@ export const env = {
   DIST_PATH: resolve(__dirname, '../../dist'),
   CLIENT_KEY: envString('CLIENT_KEY'),
   DEFAULT_SPEED: envNum('DEFAULT_SPEED'),
+  PING_INTERVAL: envNum('PING_INTERVAL'),
 } as const;
 
 export type env = typeof env;

@@ -8,12 +8,13 @@ import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.
 import { global } from '../const/global.constant';
 
 type SocketContext = {
-  sendCommand: (payload: ClientCommandPayload) => any,
+  sendCommand: (payload: ClientCommandPayload) => unknown,
   connected: boolean,
+  latency: null | number,
   ws: SocketIOClient.Socket;
 };
 
-export const SocketContext = createContext<SocketContext>(null as any);
+export const SocketContext = createContext<SocketContext>(null as never);
 
 const ws = socketIoClient(
   {
@@ -34,9 +35,12 @@ const ws = socketIoClient(
  */
 export const SocketProvider: React.FC = function SocketProvider({ children }) {
   const [connected, setConnected] = useState<SocketContext['connected']>(false);
+  const [latency, setLatency] = useState<SocketContext['latency']>(null);
 
+  /**
+   * Method to send a command to the server
+   */
   const sendCommand = useCallback(function sendCommand(payload: ClientCommandPayload) {
-    // console.log('[sendCommand]', payload);
     if (!connected) {
       console.error('[sendCommand]', 'Unable to send command: not connected', payload);
     } else {
@@ -93,9 +97,13 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       // NOOP
     }
 
+    /**
+     * Fired when the socket is disconnected for some reason
+     */
     function handleDisconnection(reason: string) {
       console.warn(`Connection to the server has been lost: ${reason}`);
       setConnected(false);
+      setLatency(null);
 
       // if the server booted us - let's attempt to re-connect
       if (reason === 'io server disconnect') {
@@ -103,6 +111,9 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       }
     }
 
+    /**
+     * Fired when a connection attempt times out
+     */
     function handleConnectTimeout() {
       console.warn('Connection attempt timed out.');
       setConnected(false);
@@ -114,9 +125,18 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       }, 500);
     }
 
+    /**
+     * Fired when a PONG is received from Socket.IO
+     * Used to measure the latency
+     */
+    function handlePong(ms: number) {
+      setLatency(ms);
+    }
+
     ws.on('connect', handleConnection);
     ws.on('disconnect', handleDisconnection);
     ws.on('connect_timeout', handleConnectTimeout);
+    ws.on('pong', handlePong);
     ws.on(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
     ws.on(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
     ws.on(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
@@ -138,7 +158,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
   }, []);
 
   return (
-    <SocketContext.Provider value={{ sendCommand, ws, connected }}>
+    <SocketContext.Provider value={{ sendCommand, ws, connected, latency }}>
       {children}
     </SocketContext.Provider>
   );

@@ -28,6 +28,8 @@ declare global {
       once(event: 'disconnect', listener: Listener<string>): any;
       on(event: 'error', listener: Listener<Error | any>): any;
       once(event: 'error', listener: Listener<Error | any>): any;
+      on(event: 'pong', listener: Listener<number | any>): any;
+      once(event: 'pong', listener: Listener<number | any>): any;
 
       // CLIENT -> SERVER
       emit(event: SOCKET_CLIENT_MESSAGE['AUTH'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]): any;

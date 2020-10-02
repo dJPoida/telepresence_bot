@@ -5,22 +5,24 @@ import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { SocketContext } from './socket.provider';
 
 type TelemetryContext = {
+  initialised: boolean,
   driveInput: XYCoordinate,
   panTiltInput: XYCoordinate,
   speedInput: number,
 
-  setDriveInput: (value: XYCoordinate) => any,
-  setPanTiltInput: (value: XYCoordinate) => any,
-  setSpeedInput: (value: number) => any,
+  setDriveInput: (value: XYCoordinate) => unknown,
+  setPanTiltInput: (value: XYCoordinate) => unknown,
+  setSpeedInput: (value: number) => unknown,
 };
 
-export const TelemetryContext = createContext<TelemetryContext>(null as any);
+export const TelemetryContext = createContext<TelemetryContext>(null as never);
 
 /**
  * @description
  * Basically wraps the socket in some state management for the control inputs
  */
 export const TelemetryProvider: React.FC = function TelemetryProvider({ children }) {
+  const [initialised, setInitialised] = useState(false);
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
   const [speedInput, setSpeedInput] = useState<TelemetryContext['speedInput']>(100);
@@ -31,6 +33,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
    * Reset all client-side input values to their defaults
    */
   const resetInputs = useCallback(() => {
+    setInitialised(false);
     setDriveInput({ x: 0, y: 0 });
     setPanTiltInput({ x: 0, y: 0 });
     setSpeedInput(0);
@@ -41,8 +44,10 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
    * know that the client is alive.
    */
   useEffect(() => {
-    // Respond to a full status update
+    // Respond to a full status update sent when the connection is established
     const handleBotStatusUpdate = (botStatus: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]) => {
+      setInitialised(true);
+
       setDriveInput(botStatus.drive);
       setPanTiltInput(botStatus.panTilt);
       setSpeedInput(botStatus.speed);
@@ -117,6 +122,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
 
   return (
     <TelemetryContext.Provider value={{
+      initialised,
       driveInput,
       panTiltInput,
       speedInput,

@@ -3,10 +3,10 @@ import React, { createContext, useCallback, useState } from 'react';
 type LocalSettingsContext = {
   showStatsOverlay: boolean,
 
-  setShowStatsOverlay: (value: boolean) => any,
+  setShowStatsOverlay: (value: boolean) => unknown,
 };
 
-export const LocalSettingsContext = createContext<LocalSettingsContext>(null as any);
+export const LocalSettingsContext = createContext<LocalSettingsContext>(null as never);
 
 type LocalSettingsState = {
   showStatsOverlay: LocalSettingsContext['showStatsOverlay'],

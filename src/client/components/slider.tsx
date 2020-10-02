@@ -13,6 +13,7 @@ export type SliderProps = {
   repeatRate?: number,
   verboseUpdate?: boolean,
   value: number,
+  invert?: boolean,
   onBeginUpdating?: () => void,
   onUpdate?: (position: number) => void,
   onEndUpdating?: () => void,
@@ -190,8 +191,8 @@ export class Slider extends React.Component<SliderProps, SliderState> {
         ? Math.max(Math.min(offsetDragPosition / maxHeight, 1), 0) * 100
         : Math.max(Math.min(offsetDragPosition / maxWidth, 1), 0) * 100;
     } else {
-      const { value } = this.props;
-      this.internalPosition = value;
+      const { value, invert } = this.props;
+      this.internalPosition = invert ? 100 - value : value;
     }
 
     this.applyKnobCSS();
@@ -201,12 +202,17 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    * Called by the updateInterval
    */
   doUpdate = (): void => {
-    const { onUpdate } = this.props;
+    const { invert, onUpdate } = this.props;
 
     // Snap the position to the nearest integer
-    const snappedPosition = this.isVertical
+    let snappedPosition = this.isVertical
       ? this.internalPosition <= 0 ? Math.ceil(this.internalPosition) : Math.floor(this.internalPosition)
       : this.internalPosition <= 0 ? Math.ceil(this.internalPosition) : Math.floor(this.internalPosition);
+
+    // Invert the value
+    if (invert) {
+      snappedPosition = 100 - snappedPosition;
+    }
 
     // Check to see if the position has changed
     const positionChanged = this.position !== snappedPosition;
@@ -405,8 +411,10 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    */
   handleWindowMouseMove = (e: MouseEvent): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
     if (
       dragging
+      && !disabled
       && (this.dragTouchIdentifier === undefined)
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
@@ -423,11 +431,10 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    * Handle the movement of a touch over the entire document
    */
   handleWindowTouchMove = (e: TouchEvent): void => {
-    const {
-      dragging,
-    } = this.state;
+    const { dragging } = this.state;
+    const { disabled } = this.props;
 
-    if (dragging && (this.dragTouchIdentifier !== undefined)) {
+    if (dragging && !disabled && (this.dragTouchIdentifier !== undefined)) {
       const dragTouch = findTouchFromTouchIdentifier(e.changedTouches, this.dragTouchIdentifier);
 
       if (dragTouch) {
@@ -472,9 +479,11 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    */
   handleKnobMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
 
     if (
-      !dragging
+      !disabled
+      && !dragging
       && (e.button === 1 || e.button === 0 || e.button === undefined)
     ) {
       e.stopPropagation();
@@ -504,9 +513,10 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    */
   handleKnobTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
     const { dragging } = this.state;
+    const { disabled } = this.props;
 
     // Start a drag and / or pinch operation?
-    if (!dragging && e.changedTouches.length > 0) {
+    if (!disabled && !dragging && e.changedTouches.length > 0) {
       e.stopPropagation();
 
       const dragTouch = e.changedTouches[0];
@@ -541,7 +551,7 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    * @inheritdoc
    */
   render(): ReactNode {
-    const { className } = this.props;
+    const { className, disabled } = this.props;
 
     return (
       <div
@@ -550,6 +560,7 @@ export class Slider extends React.Component<SliderProps, SliderState> {
           className, {
             vertical: this.isVertical,
             horizontal: this.isHorizontal,
+            disabled,
           },
         )}
       >

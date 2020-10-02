@@ -3,7 +3,7 @@ import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.help
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
 import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
-import { A_SOCKET_SERVER_MESSAGE, SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
+import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
 
 let socketServerInstance: null | SocketServer = null;

@@ -1,15 +1,21 @@
 import React, { useContext } from 'react';
 import { TelemetryContext } from '../providers/telemetry.provider';
+import { SocketContext } from '../providers/socket.provider';
 
 export type StatsOverlayProps = {
 };
 
 export const StatsOverlay: React.FC<StatsOverlayProps> = () => {
+  const { connected, latency } = useContext(SocketContext);
   const telemetry = useContext(TelemetryContext);
 
   return (
     <div className="stats-overlay">
       <span className="section-header">Health:</span>
+
+      {/* TODO: Battery Stat */}
+      <span className="key">Latency:</span>
+      <span className="value">{connected ? `${latency ?? '-'} ms` : 'Not Connected'}</span>
 
       {/* TODO: Battery Stat */}
       <span className="key">Battery:</span>
