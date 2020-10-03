@@ -34,6 +34,12 @@ export const ControllerInterface: React.FC = () => {
               value={telemetry.panTiltInput}
               onUpdate={telemetry.setPanTiltInput}
               invertY
+              keyBindings={{
+                up: 'w',
+                right: 'd',
+                down: 's',
+                left: 'a',
+              }}
             />
           </div>
         </div>
@@ -47,6 +53,10 @@ export const ControllerInterface: React.FC = () => {
               value={telemetry.speedInput}
               onUpdate={telemetry.setSpeedInput}
               invert
+              keyBindings={{
+                up: '+',
+                down: '-',
+              }}
             />
           </div>
 
@@ -58,6 +68,12 @@ export const ControllerInterface: React.FC = () => {
               value={telemetry.driveInput}
               onUpdate={telemetry.setDriveInput}
               invertY
+              keyBindings={{
+                up: 'ArrowUp',
+                right: 'ArrowRight',
+                down: 'ArrowDown',
+                left: 'ArrowLeft',
+              }}
             />
           </div>
         </div>

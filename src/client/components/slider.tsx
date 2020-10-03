@@ -14,6 +14,10 @@ export type SliderProps = {
   verboseUpdate?: boolean,
   value: number,
   invert?: boolean,
+  keyBindings?: {
+    up: string,
+    down: string,
+  }
   onBeginUpdating?: () => void,
   onUpdate?: (position: number) => void,
   onEndUpdating?: () => void,
@@ -22,6 +26,10 @@ export type SliderProps = {
 type SliderState = {
   updating: boolean,
   dragging: boolean,
+  keysDown: {
+    up: boolean,
+    down: boolean,
+  },
 }
 
 const DEFAULT_REPEAT_RATE = 50;
@@ -50,12 +58,23 @@ export class Slider extends React.Component<SliderProps, SliderState> {
     this.state = {
       updating: false,
       dragging: false,
+      keysDown: {
+        up: false,
+        down: false,
+      },
     };
 
     this.internalPosition = props.value;
     this.updateInterval = null;
     this.knobRef = createRef();
     this.dragZoneRef = createRef();
+  }
+
+  /**
+   * @inheritdoc
+   */
+  componentDidMount(): void {
+    this.bindEvents();
   }
 
   /**
@@ -74,6 +93,7 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    */
   componentWillUnmount = (): void => {
     this.unbindDragEvents();
+    this.unbindEvents();
   }
 
   /**
@@ -139,6 +159,45 @@ export class Slider extends React.Component<SliderProps, SliderState> {
   }
 
   /**
+   * Get the array of keys bound to control input
+   * (Primarily used as a shortcut to not have to unwrap the keyBindings every time a key is pressed)
+   */
+  get controlKeys(): string[] {
+    const { keyBindings } = this.props;
+    if (keyBindings) {
+      return Object.values(keyBindings);
+    }
+    return [];
+  }
+
+  /**
+   * Returns true if any of the control keys are being depressed
+   */
+  get anyKeyDown(): boolean {
+    const { keysDown } = this.state;
+    return keysDown.up || keysDown.down;
+  }
+
+  /**
+   * Bind ongoing event listeners
+   */
+  bindEvents = (): void => {
+    this.handleWindowKeyDown = this.handleWindowKeyDown.bind(this);
+    this.handleWindowKeyUp = this.handleWindowKeyUp.bind(this);
+
+    window.addEventListener('keydown', this.handleWindowKeyDown);
+    window.addEventListener('keyup', this.handleWindowKeyUp);
+  }
+
+  /**
+   * Unbind ongoing event listeners
+   */
+  unbindEvents = (): void => {
+    window.removeEventListener('keyup', this.handleWindowKeyUp);
+    window.removeEventListener('keydown', this.handleWindowKeyDown);
+  }
+
+  /**
    * Bind any window event listeners at the start of a drag operation
    */
   bindDragEvents = (): void => {
@@ -190,7 +249,17 @@ export class Slider extends React.Component<SliderProps, SliderState> {
       this.internalPosition = this.isVertical
         ? Math.max(Math.min(offsetDragPosition / maxHeight, 1), 0) * 100
         : Math.max(Math.min(offsetDragPosition / maxWidth, 1), 0) * 100;
-    } else {
+    }
+
+    // There's a key down
+    else if (this.anyKeyDown) {
+      const { keysDown } = this.state;
+      const delta = (keysDown.down ? 1 : 0) + (keysDown.up ? -1 : 0);
+
+      this.internalPosition = Math.max(Math.min(this.internalPosition + delta, 100), -100);
+    }
+
+    else {
       const { value, invert } = this.props;
       this.internalPosition = invert ? 100 - value : value;
     }
@@ -231,10 +300,11 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    * Typically called by either the user mouse down or touch start events
    */
   startUpdating = (): boolean => {
-    const { updating } = this.state;
+    const { updating, dragging } = this.state;
+    const { anyKeyDown } = this;
 
     // If not previously updating or the updateInterval already exist
-    if (!updating || this.updateInterval) {
+    if (!updating && (dragging || anyKeyDown)) {
       // kill the interval
       if (this.updateInterval) {
         clearInterval(this.updateInterval);
@@ -273,9 +343,10 @@ export class Slider extends React.Component<SliderProps, SliderState> {
    * Typically called by either the user mouse up or touch end events
    */
   endUpdating = (): boolean => {
-    const { updating } = this.state;
+    const { updating, dragging } = this.state;
+    const { anyKeyDown } = this;
 
-    if (updating || this.updateInterval) {
+    if ((updating || this.updateInterval) && !dragging && !anyKeyDown) {
       // kill the interval
       if (this.updateInterval) {
         clearInterval(this.updateInterval);
@@ -403,6 +474,66 @@ export class Slider extends React.Component<SliderProps, SliderState> {
         callBack();
       }
     });
+  }
+
+  /**
+   * Handle the press of a key
+   */
+  handleWindowKeyDown = (e: KeyboardEvent): void => {
+    const { keyBindings } = this.props;
+    if (keyBindings && this.controlKeys.includes(e.key)) {
+      const { keysDown } = this.state;
+
+      // Start of an UP press
+      if ((keyBindings.up === e.key) && !keysDown.up) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            up: true,
+          },
+        }, this.startUpdating);
+      }
+
+      // Start of an DOWN press
+      else if ((keyBindings.down === e.key) && !keysDown.down) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            down: true,
+          },
+        }, this.startUpdating);
+      }
+    }
+  }
+
+  /**
+   * Handle the release of a key
+   */
+  handleWindowKeyUp = (e: KeyboardEvent): void => {
+    const { keyBindings } = this.props;
+    if (keyBindings && this.controlKeys.includes(e.key)) {
+      const { keysDown } = this.state;
+
+      // Start of an UP press
+      if ((keyBindings.up === e.key) && keysDown.up) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            up: false,
+          },
+        }, this.endUpdating);
+      }
+
+      // Start of an DOWN press
+      else if ((keyBindings.down === e.key) && keysDown.down) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            down: false,
+          },
+        }, this.endUpdating);
+      }
+    }
   }
 
   /**

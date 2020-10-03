@@ -15,6 +15,12 @@ export type JoystickProps = {
   value: XYCoordinate,
   verboseUpdate?: boolean,
   invertY?: boolean,
+  keyBindings?: {
+    up: string,
+    right: string,
+    down: string,
+    left: string,
+  }
   onBeginUpdating?: () => void,
   onUpdate?: (position: XYCoordinate) => void,
   onEndUpdating?: () => void,
@@ -23,11 +29,17 @@ export type JoystickProps = {
 type JoystickState = {
   updating: boolean,
   dragging: boolean,
+  keysDown: {
+    up: boolean,
+    right: boolean,
+    down: boolean,
+    left: boolean,
+  }
 }
 
 const DEFAULT_REPEAT_RATE = 50;
 const DEFAULT_SPRING_BACK = true;
-const SPRING_COEFFICIENT = 0.75;
+const SPRING_COEFFICIENT = 0.9;
 const SPRING_MIN_THRESHOLD = 0.5;
 
 /**
@@ -53,11 +65,24 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
     this.state = {
       updating: false,
       dragging: false,
+      keysDown: {
+        up: false,
+        right: false,
+        down: false,
+        left: false,
+      },
     };
 
     this.updateInterval = null;
     this.knobRef = createRef();
     this.dragZoneRef = createRef();
+  }
+
+  /**
+   * @inheritdoc
+   */
+  componentDidMount(): void {
+    this.bindEvents();
   }
 
   /**
@@ -76,6 +101,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    */
   componentWillUnmount = (): void => {
     this.unbindDragEvents();
+    this.unbindEvents();
   }
 
   /**
@@ -135,6 +161,45 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
+   * Get the array of keys bound to control input
+   * (Primarily used as a shortcut to not have to unwrap the keyBindings every time a key is pressed)
+   */
+  get controlKeys(): string[] {
+    const { keyBindings } = this.props;
+    if (keyBindings) {
+      return Object.values(keyBindings);
+    }
+    return [];
+  }
+
+  /**
+   * Returns true if any of the control keys are being depressed
+   */
+  get anyKeyDown(): boolean {
+    const { keysDown } = this.state;
+    return keysDown.up || keysDown.right || keysDown.down || keysDown.left;
+  }
+
+  /**
+   * Bind ongoing event listeners
+   */
+  bindEvents = (): void => {
+    this.handleWindowKeyDown = this.handleWindowKeyDown.bind(this);
+    this.handleWindowKeyUp = this.handleWindowKeyUp.bind(this);
+
+    window.addEventListener('keydown', this.handleWindowKeyDown);
+    window.addEventListener('keyup', this.handleWindowKeyUp);
+  }
+
+  /**
+   * Unbind ongoing event listeners
+   */
+  unbindEvents = (): void => {
+    window.removeEventListener('keyup', this.handleWindowKeyUp);
+    window.removeEventListener('keydown', this.handleWindowKeyDown);
+  }
+
+  /**
    * Bind any window event listeners at the start of a drag operation
    */
   bindDragEvents = (): void => {
@@ -189,6 +254,19 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
       this.internalPosition = {
         x: Math.max(Math.min(offsetDragPosition.x / (maxWidth * 2), 1), -1) * 100,
         y: Math.max(Math.min(offsetDragPosition.y / (maxHeight * 2), 1), -1) * 100,
+      };
+    }
+
+    // There's a key down
+    else if (this.anyKeyDown) {
+      const { keysDown } = this.state;
+
+      const newX = this.internalPosition.x + (keysDown.right ? 1 : 0) + (keysDown.left ? -1 : 0);
+      const newY = this.internalPosition.y + (keysDown.down ? 1 : 0) + (keysDown.up ? -1 : 0);
+
+      this.internalPosition = {
+        x: Math.max(Math.min(newX, 100), -100),
+        y: Math.max(Math.min(newY, 100), -100),
       };
     }
 
@@ -262,10 +340,11 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * Typically called by either the user mouse down or touch start events
    */
   startUpdating = (): boolean => {
-    const { updating } = this.state;
+    const { updating, dragging } = this.state;
+    const { anyKeyDown } = this;
 
     // If not previously updating or the updateInterval already exist
-    if (!updating || this.updateInterval) {
+    if (!updating && (dragging || anyKeyDown)) {
       // kill the interval
       if (this.updateInterval) {
         clearInterval(this.updateInterval);
@@ -289,6 +368,7 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         this.doUpdate();
 
         // Setup the interval
+        console.log('Start Updating');
         this.updateInterval = setInterval(() => {
           this.doUpdate();
         }, this.repeatRate);
@@ -304,9 +384,10 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
    * Typically called by either the user mouse up or touch end events
    */
   endUpdating = (): boolean => {
-    const { updating } = this.state;
+    const { updating, dragging } = this.state;
+    const { anyKeyDown } = this;
 
-    if (updating || this.updateInterval) {
+    if ((updating || this.updateInterval) && !dragging && !anyKeyDown) {
       // kill the interval
       if (this.updateInterval) {
         clearInterval(this.updateInterval);
@@ -435,7 +516,106 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
   }
 
   /**
-   * @description
+   * Handle the press of a key
+   */
+  handleWindowKeyDown = (e: KeyboardEvent): void => {
+    const { keyBindings } = this.props;
+    if (keyBindings && this.controlKeys.includes(e.key)) {
+      const { keysDown } = this.state;
+
+      // Start of an UP press
+      if ((keyBindings.up === e.key) && !keysDown.up) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            up: true,
+          },
+        }, this.startUpdating);
+      }
+
+      // Start of an RIGHT press
+      else if ((keyBindings.right === e.key) && !keysDown.right) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            right: true,
+          },
+        }, this.startUpdating);
+      }
+
+      // Start of an DOWN press
+      else if ((keyBindings.down === e.key) && !keysDown.down) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            down: true,
+          },
+        }, this.startUpdating);
+      }
+
+      // Start of an LEFT press
+      else if ((keyBindings.left === e.key) && !keysDown.left) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            left: true,
+          },
+        }, this.startUpdating);
+      }
+    }
+  }
+
+  /**
+   * Handle the release of a key
+   */
+  handleWindowKeyUp = (e: KeyboardEvent): void => {
+    const { keyBindings } = this.props;
+    if (keyBindings && this.controlKeys.includes(e.key)) {
+      const { keysDown } = this.state;
+
+      // Start of an UP press
+      if ((keyBindings.up === e.key) && keysDown.up) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            up: false,
+          },
+        }, () => { if (!this.springBack) this.endUpdating(); });
+      }
+
+      // Start of an RIGHT press
+      else if ((keyBindings.right === e.key) && keysDown.right) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            right: false,
+          },
+        }, () => { if (!this.springBack) this.endUpdating(); });
+      }
+
+      // Start of an DOWN press
+      else if ((keyBindings.down === e.key) && keysDown.down) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            down: false,
+          },
+        }, () => { if (!this.springBack) this.endUpdating(); });
+      }
+
+      // Start of an LEFT press
+      else if ((keyBindings.left === e.key) && keysDown.left) {
+        this.setState({
+          keysDown: {
+            ...keysDown,
+            left: false,
+          },
+        }, () => { if (!this.springBack) this.endUpdating(); });
+      }
+    }
+  }
+
+  /**
    * Handle the movement of the mouse over the entire document
    */
   handleWindowMouseMove = (e: MouseEvent): void => {
