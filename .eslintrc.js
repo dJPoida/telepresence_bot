@@ -29,6 +29,11 @@ module.exports = {
   },
   parserOptions: {
     sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+      classes: true,
+      defaultParams: true,
+    },
   },
   rules: {
     'class-methods-use-this': 'off',

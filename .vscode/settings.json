@@ -55,6 +55,7 @@
     "**/dist/*"
   ],
   "cSpell.words": [
+    "bus",
     "cancelable",
     "checkbox",
     "devtool",
@@ -64,7 +65,11 @@
     "norestart",
     "peter",
     "peter eldred",
+    "pigpio",
+    "promisified",
+    "promisified bus",
     "respawn",
+    "shonky",
     "stats",
     "telepresence",
     "unmount",
