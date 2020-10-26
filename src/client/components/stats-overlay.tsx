@@ -17,13 +17,11 @@ export const StatsOverlay: React.FC<StatsOverlayProps> = () => {
       <span className="key">Latency:</span>
       <span className="value">{connected ? `${latency ?? '-'} ms` : 'Not Connected'}</span>
 
-      {/* TODO: Battery Stat */}
       <span className="key">Battery:</span>
-      <span className="value">-- V</span>
+      <span className="value">{`${telemetry.power.voltage ?? '--'} V`}</span>
 
-      {/* TODO: Current Stat */}
       <span className="key">Current:</span>
-      <span className="value">-- mA</span>
+      <span className="value">{`${telemetry.power.current ?? '--'} mA`}</span>
 
       <span className="section-header">Inputs:</span>
       <span className="key">Speed:</span>

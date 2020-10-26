@@ -233,6 +233,21 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
       this.io.emit(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, payload);
     }
   }
+
+  /**
+   * Send the power utilisation stats update to a specific socket or to everyone
+   */
+  sendPowerUtilisationStatsToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.POWER_STATUS, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.POWER_STATUS, payload);
+    }
+  }
 }
 
 export const socketServer = SocketServer.getInstance();

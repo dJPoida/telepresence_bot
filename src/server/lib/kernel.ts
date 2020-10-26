@@ -14,6 +14,7 @@ import { BotStatusDto } from '../../shared/types/bot-status.dto.type';
 import { InputManagerEventMap, INPUT_MANAGER_EVENT } from '../const/input-manager-event.const';
 import { MotorDriver } from './motor-driver';
 import { SpeakerDriver } from './speaker-driver';
+import { PowerMonitor } from './power-monitor';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -29,6 +30,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly speakerDriver: SpeakerDriver;
 
   public readonly inputManager: InputManager;
+
+  public readonly powerMonitor: PowerMonitor
 
   private _initialised = false;
 
@@ -46,6 +49,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.ledStripDriver = new LEDStripDriver();
     this.motorDriver = new MotorDriver();
     this.speakerDriver = new SpeakerDriver();
+    this.powerMonitor = new PowerMonitor();
 
     this.initialise();
   }
@@ -59,6 +63,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       drive: this.inputManager.drive,
       panTilt: this.inputManager.panTilt,
       speed: this.inputManager.speed,
+      power: this.powerMonitor.power,
     };
   }
 

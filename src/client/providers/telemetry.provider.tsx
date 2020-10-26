@@ -1,11 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { CLIENT_COMMAND } from '../../shared/constants/client-command.const';
 import { SOCKET_SERVER_MESSAGE, SocketServerMessageMap } from '../../shared/constants/socket-server-message.const';
+import { Power } from '../../shared/types/power.type';
 import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { SocketContext } from './socket.provider';
 
 type TelemetryContext = {
   initialised: boolean,
+  power: Power,
   driveInput: XYCoordinate,
   panTiltInput: XYCoordinate,
   speedInput: number,
@@ -23,6 +25,7 @@ export const TelemetryContext = createContext<TelemetryContext>(null as never);
  */
 export const TelemetryProvider: React.FC = function TelemetryProvider({ children }) {
   const [initialised, setInitialised] = useState(false);
+  const [power, setPower] = useState<TelemetryContext['power']>({ current: null, voltage: null });
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
   const [speedInput, setSpeedInput] = useState<TelemetryContext['speedInput']>(100);
@@ -48,24 +51,30 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
     const handleBotStatusUpdate = (botStatus: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]) => {
       setInitialised(true);
 
+      setPower(botStatus.power);
       setDriveInput(botStatus.drive);
       setPanTiltInput(botStatus.panTilt);
       setSpeedInput(botStatus.speed);
     };
 
     // Respond to a drive input status update
-    const handleDriveInputStatusUpdate = ({ drive }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]) => {
-      setDriveInput(drive);
+    const handleDriveInputStatusUpdate = ({ drive: newDrive }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]) => {
+      setDriveInput(newDrive);
     };
 
     // Respond to a Pan/Tilt input status update
-    const handlePanTiltInputStatusUpdate = ({ panTilt }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]) => {
-      setPanTiltInput(panTilt);
+    const handlePanTiltInputStatusUpdate = ({ panTilt: newPanTilt }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]) => {
+      setPanTiltInput(newPanTilt);
     };
 
     // Respond to a speed input status update
-    const handleSpeedInputStatusUpdate = ({ speed }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]) => {
-      setSpeedInput(speed);
+    const handleSpeedInputStatusUpdate = ({ speed: newSpeed }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]) => {
+      setSpeedInput(newSpeed);
+    };
+
+    // Respond to a power status update
+    const handlePowerStatusUpdate = ({ power: newPower }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]) => {
+      setPower(newPower);
     };
 
     if (!connected) {
@@ -78,7 +87,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .on(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate);
+        .on(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate)
+        .on(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
     }
 
     return () => {
@@ -86,7 +96,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.off(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .off(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate);
+        .off(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate)
+        .off(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
     };
   }, [ws, connected, resetInputs]);
 
@@ -123,6 +134,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
   return (
     <TelemetryContext.Provider value={{
       initialised,
+      power,
       driveInput,
       panTiltInput,
       speedInput,
