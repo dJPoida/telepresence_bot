@@ -13,5 +13,7 @@
   },
   "exclude" : [
     "./src/client",
+    "./node_modules",
+    "./dist"
   ]
 }

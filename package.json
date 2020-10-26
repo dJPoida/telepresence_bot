@@ -12,7 +12,8 @@
   "scripts": {
     "start": "node --unhandled-rejections=strict dist/server/main.js",
     "dev": "export NODE_ENV=development || SET NODE_ENV=development && nodemon --exec \"npx ts-node\" \"src/server/main.ts\" -P tsconfig.server.dev.json",
-    "build": "webpack --config webpack.config.prod.js && tsc -P tsconfig.server.prod.json"
+    "build": "webpack --config webpack.config.prod.js && tsc -P tsconfig.server.prod.json",
+    "build-dev": "export NODE_ENV=development || SET NODE_ENV=development && webpack --config webpack.config.dev.js && tsc -P tsconfig.server.dev.json"
   },
   "devDependencies": {
     "@types/classnames": "^2.2.10",
