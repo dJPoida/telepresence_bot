@@ -8,6 +8,6 @@ export type A_LED_STRIP_EVENT = LED_STRIP_EVENT[keyof LED_STRIP_EVENT];
 /**
  * Event Payloads
  */
-export interface LEDStripEventPayload {
+export interface LEDStripEventMap {
   [LED_STRIP_EVENT.INITIALISED]: undefined;
 }

@@ -2,7 +2,7 @@ import { Gpio } from 'pigpio';
 import { PromisifiedBus } from 'i2c-bus';
 import { PCA9685 } from 'pca9685-promise';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
-import { MotorDriverEventPayload, MOTOR_DRIVER_EVENT } from '../const/motor-driver-event.const';
+import { MotorDriverEventMap, MOTOR_DRIVER_EVENT } from '../const/motor-driver-event.const';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 
 // const speed = 1;
@@ -97,53 +97,7 @@ import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 // //so the program will not close instantly
 // process.stdin.resume();
 
-// async function exitHandler(options, exitCode) {
-//     console.log('exitHandler', exitCode);
-
-//     // Only allow the shutdown once.
-//     if (!shuttingDown) {
-//         console.log('');
-//         console.log('Shutting Down...');
-
-//         // Teardown the Enable Pins
-//         console.log(' - Motor Control Enable Pins');
-//         Object.entries(wheels).forEach(([wheel, config]) => {
-//             if (config.enabled) {
-//                 config.dirPin1.writeSync(0);
-//                 config.dirPin2.writeSync(0);
-//                 config.dirPin1.unexport();
-//                 config.dirPin2.unexport();
-//             }
-//         })
-
-//         console.log(' - PCA9685');
-//         await pca9685.shutdown_all();
-
-//         console.log(' - I2C Bus');
-//         await bus.close();
-//     }
-
-//     shuttingDown = true;
-
-//     if (options.exit) {
-//         process.exit(exitCode || 0);
-//     }
-// }
-
-// //do something when app is closing
-// process.once('exit', exitHandler.bind(null,{cleanup:true}));
-
-// //catches ctrl+c event
-// process.once('SIGINT', exitHandler.bind(null, {exit:true}));
-
-// // catches "kill pid" (for example: nodemon restart)
-// process.once('SIGUSR1', exitHandler.bind(null, {exit:true}));
-// process.once('SIGUSR2', exitHandler.bind(null, {exit:true}));
-
-// //catches uncaught exceptions
-// process.once('uncaughtException', exitHandler.bind(null, {exit:true}));
-
-export class MotorDriver extends TypedEventEmitter<MotorDriverEventPayload> {
+export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
 
@@ -171,9 +125,6 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventPayload> {
    */
   private bindEvents(): void {
     this.once(MOTOR_DRIVER_EVENT.INITIALISED, this.handleInitialised.bind(this));
-
-    // trap the SIGINT and reset before exit
-    process.on('SIGINT', this.handleApplicationTerminate.bind(this));
   }
 
   /**
@@ -185,7 +136,36 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventPayload> {
     // TODO: more initialisation
 
     // Let everyone know that the Motor Driver is initialised
+    this._initialised = true;
     this.emit(MOTOR_DRIVER_EVENT.INITIALISED, undefined);
+  }
+
+  /**
+   * Shut down this class
+   */
+  public async shutDown(): Promise<void> {
+    if (this.initialised) {
+      this.log.info('Motor Driver shutting down...');
+      // TODO: shutdown the Motor Driver
+
+      //         // Teardown the Enable Pins
+      //         console.log(' - Motor Control Enable Pins');
+      //         Object.entries(wheels).forEach(([wheel, config]) => {
+      //             if (config.enabled) {
+      //                 config.dirPin1.writeSync(0);
+      //                 config.dirPin2.writeSync(0);
+      //                 config.dirPin1.unexport();
+      //                 config.dirPin2.unexport();
+      //             }
+      //         })
+
+      //         console.log(' - PCA9685');
+      //         await pca9685.shutdown_all();
+
+      //         console.log(' - I2C Bus');
+      //         await bus.close();
+      //     }
+    }
   }
 
   /**
@@ -193,13 +173,5 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventPayload> {
    */
   private handleInitialised() {
     this.log.info('Motor Driver Initialised.');
-  }
-
-  /**
-   * @description
-   * Fired by the application JUST before process termination
-   */
-  private handleApplicationTerminate() {
-    // TODO: shutdown the Motor Driver
   }
 }

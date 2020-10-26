@@ -63,6 +63,10 @@ declare global {
       on(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
       once(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
     }
   }
 
@@ -87,6 +91,7 @@ declare global {
       emit(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]): any;
 
       // CLIENT -> SERVER
       on(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;

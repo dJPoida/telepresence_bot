@@ -19,10 +19,13 @@ import { env } from '../env';
 export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
   protected readonly log = classLoggerFactory(this);
 
+  private _initialised = false;
+
   private _speed = env.DEFAULT_SPEED;
   private _drive: XYCoordinate = { x: 0, y: 0 };
   private _panTilt: XYCoordinate = { x: 0, y: 0 };
 
+  get initialised(): boolean { return this._initialised; }
   get speed(): number { return this._speed; }
   get drive(): XYCoordinate { return this._drive; }
   get panTilt(): XYCoordinate { return this._panTilt; }
@@ -34,20 +37,40 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
     this.once(INPUT_MANAGER_EVENT.INITIALISED, this.handleInitialised.bind(this));
 
     // Listen for incoming client commands
-    socketServer.on(SOCKET_SERVER_EVENT.CLIENT_COMMAND, this.handleClientCommand.bind(this));
+    this.handleClientCommand = this.handleClientCommand.bind(this);
+    socketServer.on(SOCKET_SERVER_EVENT.CLIENT_COMMAND, this.handleClientCommand);
+  }
+
+  /**
+   * Unbind any event listeners this class cares about
+   */
+  private unbindEvents() {
+    socketServer.off(SOCKET_SERVER_EVENT.CLIENT_COMMAND, this.handleClientCommand);
   }
 
   /**
    * Initialise the Input Manager
    */
-  async initialise(): Promise<void> {
+  public async initialise(): Promise<void> {
     this.log.info('Input Manager initialising...');
 
     // Bind the events
     this.bindEvents();
 
     // Let everyone know that the Input Manager is initialised
+    this._initialised = true;
     this.emit(INPUT_MANAGER_EVENT.INITIALISED, undefined);
+  }
+
+  /**
+   * Shut down the Input Manager
+   */
+  public async shutDown(): Promise<void> {
+    this.unbindEvents();
+
+    if (this.initialised) {
+      this.log.info('Input Manager shutting down...');
+    }
   }
 
   /**

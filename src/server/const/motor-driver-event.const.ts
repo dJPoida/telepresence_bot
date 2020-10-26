@@ -8,6 +8,6 @@ export type A_MOTOR_DRIVER_EVENT = MOTOR_DRIVER_EVENT[keyof MOTOR_DRIVER_EVENT];
 /**
  * Event Payloads
  */
-export interface MotorDriverEventPayload {
+export interface MotorDriverEventMap {
   [MOTOR_DRIVER_EVENT.INITIALISED]: undefined;
 }

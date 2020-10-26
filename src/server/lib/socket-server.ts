@@ -20,12 +20,16 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
 
   private _io: SocketIO.Server | null = null;
 
+  private _initialised = false;
+
   private connectedClientCount = 0;
 
   /**
    * The SocketIO Server
    */
   get io(): SocketIO.Server { if (!this._io) throw ReferenceError('Attempt to access SocketServer.io prior to assignment!'); return this._io; }
+
+  get initialised(): boolean { return this._initialised; }
 
   /**
    * @description
@@ -142,7 +146,6 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   }
 
   /**
-   * @description
    * Initialise the Server Socket Handler
    */
   async initialise(io: SocketIO.Server) {
@@ -155,7 +158,20 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     this.bindEvents();
 
     // Let everyone know that the Socket Handler is initialised
+    this._initialised = true;
     this.emit(SOCKET_SERVER_EVENT.INITIALISED, undefined);
+  }
+
+  /**
+   * Called by the Kernel when it is time to tear down the application
+   */
+  async shutDown(reason?: string) {
+    if (this.initialised && this.io) {
+      this.log.info('Socket Server shutting down...');
+      this.io.emit(SOCKET_SERVER_MESSAGE.EVENT_SHUT_DOWN, { reason });
+
+      // TODO: kill all client connections with the appropriate reason
+    }
   }
 
   /**

@@ -1,6 +1,6 @@
 import ws281x, { Ws281x } from 'rpi-ws281x-native';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
-import { LEDStripEventPayload, LED_STRIP_EVENT } from '../const/led-strip-event.const';
+import { LEDStripEventMap, LED_STRIP_EVENT } from '../const/led-strip-event.const';
 import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 
@@ -25,7 +25,7 @@ export type LEDPixelOffsets = {
   left: number
 }
 
-export class LEDStripDriver extends TypedEventEmitter<LEDStripEventPayload> {
+export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
   private readonly device: Ws281x = ws281x;
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
@@ -91,9 +91,6 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventPayload> {
    */
   private bindEvents(): void {
     this.once(LED_STRIP_EVENT.INITIALISED, this.handleInitialised.bind(this));
-
-    // trap the SIGINT and reset before exit
-    process.on('SIGINT', this.handleApplicationTerminate.bind(this));
   }
 
   /**
@@ -109,7 +106,20 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventPayload> {
     this.device.setBrightness(this.brightness);
 
     // Let everyone know that the LED Strip is initialised
+    this._initialised = true;
     this.emit(LED_STRIP_EVENT.INITIALISED, undefined);
+  }
+
+  /**
+   * Shut down the LED device
+   */
+  public async shutDown(): Promise<void> {
+    if (this.initialised) {
+      this.log.info('LED Device shutting down...');
+
+      // Make sure that the LED strip is reset prior to terminating the application
+      this.device.reset();
+    }
   }
 
   /**
@@ -140,15 +150,6 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventPayload> {
     this.log.info('LED Device Initialised.');
 
     this.render();
-  }
-
-  /**
-   * @description
-   * Fired by the application JUST before process termination
-   */
-  private handleApplicationTerminate() {
-    // Make sure that the LED strip is reset prior to terminating the application
-    this.device.reset();
   }
 
   /**

@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import socketIo from 'socket.io';
 import http from 'http';
-import { KernelEventPayload, KERNEL_EVENT } from '../const/kernel-event.const';
+import { KernelEventMap, KERNEL_EVENT } from '../const/kernel-event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
 import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
@@ -13,8 +13,9 @@ import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-serve
 import { BotStatusDto } from '../../shared/types/bot-status.dto.type';
 import { InputManagerEventMap, INPUT_MANAGER_EVENT } from '../const/input-manager-event.const';
 import { MotorDriver } from './motor-driver';
+import { SpeakerDriver } from './speaker-driver';
 
-export class Kernel extends TypedEventEmitter<KernelEventPayload> {
+export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
 
   public readonly expressApp: Express;
@@ -25,9 +26,13 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
 
   public readonly motorDriver: MotorDriver;
 
+  public readonly speakerDriver: SpeakerDriver;
+
   public readonly inputManager: InputManager;
 
   private _initialised = false;
+
+  private _shuttingDown = false;
 
   /**
   * @constructor
@@ -40,11 +45,14 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
     this.inputManager = new InputManager();
     this.ledStripDriver = new LEDStripDriver();
     this.motorDriver = new MotorDriver();
+    this.speakerDriver = new SpeakerDriver();
 
     this.initialise();
   }
 
   get initialised(): boolean { return this._initialised; }
+
+  get shuttingDown(): boolean { return this._shuttingDown; }
 
   get botStatusDto(): BotStatusDto {
     return {
@@ -60,6 +68,13 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   private async initialise(): Promise<void> {
     this.log.info('Kernel initialising...');
 
+    this.bindEvents();
+
+    // Initialise the Speaker Driver
+    this.speakerDriver.initialise();
+
+    // TODO: Initialise the Power Monitor Driver
+
     // Initialise the Input Manager
     this.inputManager.initialise();
 
@@ -74,11 +89,29 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
       pingInterval: env.PING_INTERVAL,
     }));
 
-    // TODO: Initializing stuff
-
     this._initialised = true;
-    this.bindEvents();
     this.emit(KERNEL_EVENT.INITIALISED, undefined);
+  }
+
+  /**
+   * Perform the sequence of shutting down the hardware
+   */
+  private async shutDown(): Promise<void> {
+    // Only allow the shutdown once.
+    if (!this.shuttingDown) {
+      this._shuttingDown = true;
+      this.log.info('Shutting Down...');
+
+      // TODO: Play a Shutdown Tune
+
+      // Shutdown the bot in the appropriate order.
+      await socketServer.shutDown();
+      await this.motorDriver.shutDown();
+      await this.ledStripDriver.shutDown();
+      await this.inputManager.shutDown();
+      await this.speakerDriver.shutDown();
+      // TODO: Shutdown the Power Monitor Driver
+    }
   }
 
   /**
@@ -98,6 +131,30 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
    * Bind the event listeners this class cares about
    */
   private bindEvents() {
+    // When the process is requested to exit, clean up prior to exit.
+    process.once('exit', (code) => {
+      this.handleTerminated({ cleanUp: true }, code);
+    });
+
+    // catch ctrl+c events
+    process.once('SIGINT', () => {
+      this.handleTerminated({ exit: true }, 0);
+    });
+
+    // catches "kill pid" (for example: nodemon restart)
+    process.once('SIGUSR1', () => {
+      this.handleTerminated({ exit: true }, 0);
+    });
+    process.once('SIGUSR2', () => {
+      this.handleTerminated({ exit: true }, 0);
+    });
+
+    // catches uncaught exceptions
+    process.once('uncaughtException', (error) => {
+      this.log.error('Uncaught Exception: ', error);
+      this.handleTerminated({ exit: true }, 1);
+    });
+
     this.once(KERNEL_EVENT.INITIALISED, this.handleInitialised.bind(this));
     socketServer.on(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, this.handleClientConnected.bind(this));
     this.inputManager
@@ -112,6 +169,21 @@ export class Kernel extends TypedEventEmitter<KernelEventPayload> {
   private handleInitialised() {
     this.log.info('Kernel initialised.');
     this.run();
+  }
+
+  /**
+   * Fired by any of the appropriate termination events like SIGINT or CTRL+C etc...
+   */
+  private async handleTerminated(options: {cleanUp?: boolean, exit?: boolean}, exitCode: number) {
+    this.log.warn(`Kernel Terminating with exit code ${exitCode}...`);
+
+    // Perform the graceful shutdown
+    await this.shutDown();
+
+    if (options.exit) {
+      // eslint-disable-next-line no-process-exit
+      process.exit(exitCode || 0);
+    }
   }
 
   /**

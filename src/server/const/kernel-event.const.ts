@@ -8,6 +8,6 @@ export type A_KERNEL_EVENT = KERNEL_EVENT[keyof KERNEL_EVENT];
 /**
  * Event Payloads
  */
-export interface KernelEventPayload {
+export interface KernelEventMap {
   [KERNEL_EVENT.INITIALISED]: undefined;
 }
