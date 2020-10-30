@@ -75,27 +75,27 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     this.bindEvents();
 
-    // Initialise the Speaker Driver
-    this.speakerDriver.initialise();
+    Promise.all([
+      this.speakerDriver.initialise(),
+      this.powerMonitor.initialise(),
+      this.inputManager.initialise(),
+    ]).then(() => {
+      this._initialised = true;
+      this.emit(KERNEL_EVENT.INITIALISED, undefined);
+    }).catch((error) => {
+      console.log(error);
+    });
 
-    // TODO: Initialise the Power Monitor Driver
+    // // Initialise the LED Strip Driver
+    // this.ledStripDriver.initialise();
 
-    // Initialise the Input Manager
-    this.inputManager.initialise();
+    // // Initialise the Motor Driver
+    // this.motorDriver.initialise();
 
-    // Initialise the LED Strip Driver
-    this.ledStripDriver.initialise();
-
-    // Initialise the Motor Driver
-    this.motorDriver.initialise();
-
-    // Initialise the Socket Server
-    socketServer.initialise(socketIo(this.httpServer, {
-      pingInterval: env.PING_INTERVAL,
-    }));
-
-    this._initialised = true;
-    this.emit(KERNEL_EVENT.INITIALISED, undefined);
+    // // Initialise the Socket Server
+    // socketServer.initialise(socketIo(this.httpServer, {
+    //   pingInterval: env.PING_INTERVAL,
+    // }));
   }
 
   /**
@@ -109,13 +109,41 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
       // TODO: Play a Shutdown Tune
 
-      // Shutdown the bot in the appropriate order.
-      await socketServer.shutDown();
-      await this.motorDriver.shutDown();
-      await this.ledStripDriver.shutDown();
-      await this.inputManager.shutDown();
-      await this.speakerDriver.shutDown();
-      // TODO: Shutdown the Power Monitor Driver
+      try {
+        await socketServer.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the Socket Server: ${error}`);
+      }
+
+      try {
+        await this.motorDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down Motor Driver: ${error}`);
+      }
+
+      try {
+        await this.ledStripDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down LED Strip Driver: ${error}`);
+      }
+
+      try {
+        await this.inputManager.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down Input Manager: ${error}`);
+      }
+
+      try {
+        await this.speakerDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the Speaker Driver: ${error}`);
+      }
+
+      try {
+        await this.powerMonitor.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the Power Monitor: ${error}`);
+      }
     }
   }
 

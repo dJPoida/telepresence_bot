@@ -1,3 +1,5 @@
+import { AN_INA219_I2C_ADDRESS, Ina219, INA219_ADC_BITS, INA219_ADC_SAMPLE, INA219_BUS_VOLTAGE_RANGE, INA219_MODE, INA219_PGA_BITS } from '@djpoida/ina219';
+import { env } from '../env';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { Power } from '../../shared/types/power.type';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
@@ -5,13 +7,24 @@ import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 
 export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   protected readonly log = classLoggerFactory(this);
+  private readonly ina219: Ina219;
   private _initialised = false;
+  private pollInterval: null | ReturnType<typeof setInterval> = null;
+
+  private _averageVoltage = 0;
+  private readonly voltageSamples: number[] = [];
+
+  private _averageCurrent = 0;
+  private readonly currentSamples: number[] = [];
 
   /**
    * @constructor
    */
   constructor() {
     super();
+
+    this.ina219 = new Ina219();
+
     this.bindEvents();
   }
 
@@ -21,19 +34,19 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   get initialised(): boolean { return this._initialised; }
 
   /**
-   * returns true if the hardware is available
-   * TODO
+   * returns true if the ina219 hardware is available
    */
-  get hardwareAvailable(): boolean { return false; }
+  get hardwareAvailable(): boolean { return this.ina219.hardwareAvailable; }
 
+  /**
+   * Read the current passing through the ina219 in milliamps
+   */
   get current(): null | number {
-    // TODO: current
-    return this.hardwareAvailable ? 0 : null;
+    return this.hardwareAvailable ? this._averageCurrent : null;
   }
 
   get voltage(): null | number {
-    // TODO: voltage
-    return this.hardwareAvailable ? 0 : null;
+    return this.hardwareAvailable ? this._averageVoltage : null;
   }
 
   get power(): Power { return {
@@ -45,7 +58,10 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.once(POWER_MONITOR_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.handleInitialised = this.handleInitialised.bind(this);
+    this.handlePollValues = this.handlePollValues.bind(this);
+
+    this.once(POWER_MONITOR_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
@@ -54,7 +70,23 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   public async initialise(): Promise<void> {
     this.log.info('Power Monitor initialising...');
 
-    // TODO: more power monitor initialisation
+    // Initialise the ina219
+    const initResult = await this.ina219.init(env.I2C_BUS_NO, env.I2C_ADDRESS_INA219 as AN_INA219_I2C_ADDRESS);
+
+    // Only perform the bulk of the hardware initialisation if we actually have hardware
+    if (initResult === true && this.ina219.hardwareAvailable) {
+      // Configure the sensor
+      this.ina219.setBusRNG(INA219_BUS_VOLTAGE_RANGE.RANGE_32V);
+      this.ina219.setPGA(INA219_PGA_BITS.PGA_BITS_8);
+      this.ina219.setBusADC(INA219_ADC_BITS.ADC_BITS_12, INA219_ADC_SAMPLE.ADC_SAMPLE_8);
+      this.ina219.setShuntADC(INA219_ADC_BITS.ADC_BITS_12, INA219_ADC_SAMPLE.ADC_SAMPLE_8);
+      this.ina219.setMode(INA219_MODE.SHUNT_AND_BUS_VOL_CON);
+
+      // Setup the timer for reading the values
+      this.pollInterval = setInterval(this.handlePollValues, env.INA219_POLL_INTERVAL);
+    } else {
+      this.log.error(`Failed to initialise the Power Monitor: ${initResult}`);
+    }
 
     // Let everyone know that the Power Monitor is initialised
     this._initialised = true;
@@ -67,7 +99,11 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   public async shutDown(): Promise<void> {
     if (this.initialised) {
       this.log.info('Power Monitor shutting down...');
-      // TODO: shutdown the Power Monitor
+      if (this.pollInterval) {
+        clearInterval(this.pollInterval);
+        this.pollInterval = null;
+      }
+      await this.ina219.close();
     }
   }
 
@@ -76,5 +112,28 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
    */
   private handleInitialised() {
     this.log.info('Power Monitor Initialised.');
+  }
+
+  /**
+   * Read the voltage and the current values
+   */
+  private async handlePollValues() {
+    // Read the sensor
+    const newVoltage = await this.ina219.getBusVoltage_V();
+    const newCurrent = await this.ina219.getCurrent_mA();
+
+    // Record the voltage sample and limit the sample count
+    if (this.voltageSamples.push(newVoltage) > env.INA219_SAMPLES) {
+      this.voltageSamples.shift();
+    }
+    if (this.currentSamples.push(newCurrent) > env.INA219_SAMPLES) {
+      this.currentSamples.shift();
+    }
+
+    // Calculate the new averages
+    this._averageVoltage = this.voltageSamples.reduce((a, b) => (a + b)) / this.voltageSamples.length;
+    this._averageCurrent = this.currentSamples.reduce((a, b) => (a + b)) / this.currentSamples.length;
+
+    this.emit(POWER_MONITOR_EVENT.UPDATE, this.power);
   }
 }
