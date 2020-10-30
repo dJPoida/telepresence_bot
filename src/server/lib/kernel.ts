@@ -75,27 +75,28 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     this.bindEvents();
 
+    try {
+      await socketServer.initialise(socketIo(this.httpServer, { pingInterval: env.PING_INTERVAL }));
+    } catch (error) {
+      this.log.error(error);
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
+    }
+
     Promise.all([
       this.speakerDriver.initialise(),
       this.powerMonitor.initialise(),
       this.inputManager.initialise(),
+      this.ledStripDriver.initialise(),
+      this.motorDriver.initialise(),
     ]).then(() => {
       this._initialised = true;
       this.emit(KERNEL_EVENT.INITIALISED, undefined);
     }).catch((error) => {
-      console.log(error);
+      this.log.error(error);
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
     });
-
-    // // Initialise the LED Strip Driver
-    // this.ledStripDriver.initialise();
-
-    // // Initialise the Motor Driver
-    // this.motorDriver.initialise();
-
-    // // Initialise the Socket Server
-    // socketServer.initialise(socketIo(this.httpServer, {
-    //   pingInterval: env.PING_INTERVAL,
-    // }));
   }
 
   /**

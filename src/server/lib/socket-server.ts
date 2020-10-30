@@ -49,9 +49,21 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents() {
-    this.once(SOCKET_SERVER_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.handleInitialised = this.handleInitialised.bind(this);
+    this.handleSocketConnected = this.handleSocketConnected.bind(this);
 
-    this.io.on('connection', this.handleSocketConnected.bind(this));
+    this.once(SOCKET_SERVER_EVENT.INITIALISED, this.handleInitialised);
+
+    this.io.on('connection', this.handleSocketConnected);
+  }
+
+  /**
+   * unbind the event listeners this class cares about
+   */
+  private unbindEvents() {
+    this.once(SOCKET_SERVER_EVENT.INITIALISED, this.handleInitialised);
+
+    this.io.on('connection', this.handleSocketConnected);
   }
 
   /**
@@ -154,7 +166,6 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
     // Attach the Socket Server
     this._io = io;
 
-    // Bind the events
     this.bindEvents();
 
     // Let everyone know that the Socket Handler is initialised
@@ -166,6 +177,8 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
    * Called by the Kernel when it is time to tear down the application
    */
   async shutDown(reason?: string) {
+    this.unbindEvents();
+
     if (this.initialised && this.io) {
       this.log.info('Socket Server shutting down...');
       this.io.emit(SOCKET_SERVER_MESSAGE.EVENT_SHUT_DOWN, { reason });

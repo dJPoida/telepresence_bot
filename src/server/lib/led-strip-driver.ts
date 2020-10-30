@@ -53,6 +53,8 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
   constructor() {
     super();
     this.calcPixelOffsets();
+
+    this.handleInitialised = this.handleInitialised.bind(this);
     this.bindEvents();
   }
 
@@ -90,7 +92,14 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.once(LED_STRIP_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.once(LED_STRIP_EVENT.INITIALISED, this.handleInitialised);
+  }
+
+  /**
+   * Unbind any event listeners this class cares about
+   */
+  private unbindEvents(): void {
+    this.off(LED_STRIP_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
@@ -114,6 +123,8 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
    * Shut down the LED device
    */
   public async shutDown(): Promise<void> {
+    this.unbindEvents();
+
     if (this.initialised) {
       this.log.info('LED Device shutting down...');
 

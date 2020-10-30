@@ -25,6 +25,8 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
 
     this.ina219 = new Ina219();
 
+    this.handleInitialised = this.handleInitialised.bind(this);
+    this.handlePollValues = this.handlePollValues.bind(this);
     this.bindEvents();
   }
 
@@ -58,10 +60,14 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.handleInitialised = this.handleInitialised.bind(this);
-    this.handlePollValues = this.handlePollValues.bind(this);
-
     this.once(POWER_MONITOR_EVENT.INITIALISED, this.handleInitialised);
+  }
+
+  /**
+   * Unbind the event listeners this class cares about
+   */
+  private unbindEvents(): void {
+    this.off(POWER_MONITOR_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
@@ -97,6 +103,8 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
    * Shut down this class
    */
   public async shutDown(): Promise<void> {
+    this.unbindEvents();
+
     if (this.initialised) {
       this.log.info('Power Monitor shutting down...');
       if (this.pollInterval) {

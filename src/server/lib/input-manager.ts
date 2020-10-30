@@ -31,13 +31,23 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
   get panTilt(): XYCoordinate { return this._panTilt; }
 
   /**
+   * @constructor
+   */
+  constructor() {
+    super();
+
+    this.handleInitialised = this.handleInitialised.bind(this);
+    this.handleClientCommand = this.handleClientCommand.bind(this);
+    this.bindEvents();
+  }
+
+  /**
    * Bind the event listeners this class cares about
    */
   private bindEvents() {
-    this.once(INPUT_MANAGER_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.once(INPUT_MANAGER_EVENT.INITIALISED, this.handleInitialised);
 
     // Listen for incoming client commands
-    this.handleClientCommand = this.handleClientCommand.bind(this);
     socketServer.on(SOCKET_SERVER_EVENT.CLIENT_COMMAND, this.handleClientCommand);
   }
 
@@ -45,6 +55,8 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
    * Unbind any event listeners this class cares about
    */
   private unbindEvents() {
+    this.off(INPUT_MANAGER_EVENT.INITIALISED, this.handleInitialised);
+
     socketServer.off(SOCKET_SERVER_EVENT.CLIENT_COMMAND, this.handleClientCommand);
   }
 
@@ -53,9 +65,6 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
    */
   public async initialise(): Promise<void> {
     this.log.info('Input Manager initialising...');
-
-    // Bind the events
-    this.bindEvents();
 
     // Let everyone know that the Input Manager is initialised
     this._initialised = true;

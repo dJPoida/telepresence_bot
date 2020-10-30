@@ -21,6 +21,8 @@ export class SpeakerDriver extends TypedEventEmitter<SpeakerDriverEventMap> {
    */
   constructor() {
     super();
+
+    this.handleInitialised = this.handleInitialised.bind(this);
     this.bindEvents();
   }
 
@@ -39,7 +41,14 @@ export class SpeakerDriver extends TypedEventEmitter<SpeakerDriverEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.once(SPEAKER_DRIVER_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.once(SPEAKER_DRIVER_EVENT.INITIALISED, this.handleInitialised);
+  }
+
+  /**
+   * Unbind the event listeners this class cares about
+   */
+  private unbindEvents(): void {
+    this.off(SPEAKER_DRIVER_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
@@ -61,6 +70,8 @@ export class SpeakerDriver extends TypedEventEmitter<SpeakerDriverEventMap> {
    * Shut down this class
    */
   public async shutDown(): Promise<void> {
+    this.unbindEvents();
+
     if (this.initialised) {
       this.log.info('Speaker Driver shutting down...');
       // TODO: shutdown the Speaker Driver

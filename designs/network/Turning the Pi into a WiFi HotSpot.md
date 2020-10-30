@@ -60,3 +60,11 @@ In the event that I have to re-install the Raspberry Pi, here's what I did to ac
   - Connect to the Pi via WiFi from a web browser: `http://[RPi WiFi IP Address]:3000`
     - In the Network tab - make sure the network interfaces have the expected IP addresses and are appropriately connected
   - Spin up the TPBot server again and attempt to connect to it from the iPad on `192.168.50.1`
+
+
+## Notes
+After installing, the Accesspoint config page can conflict with the web server. Disable it using the following
+```
+sudo systemctl disable lighttpd
+sudo systemctl stop lighttpd
+```

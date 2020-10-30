@@ -106,6 +106,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    */
   constructor() {
     super();
+
+    this.handleInitialised = this.handleInitialised.bind(this);
     this.bindEvents();
   }
 
@@ -124,7 +126,14 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.once(MOTOR_DRIVER_EVENT.INITIALISED, this.handleInitialised.bind(this));
+    this.once(MOTOR_DRIVER_EVENT.INITIALISED, this.handleInitialised);
+  }
+
+  /**
+   * Unbind the event listeners this class cares about
+   */
+  private unbindEvents(): void {
+    this.off(MOTOR_DRIVER_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
@@ -144,6 +153,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    * Shut down this class
    */
   public async shutDown(): Promise<void> {
+    this.unbindEvents();
+
     if (this.initialised) {
       this.log.info('Motor Driver shutting down...');
       // TODO: shutdown the Motor Driver
