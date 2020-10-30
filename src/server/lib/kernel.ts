@@ -15,6 +15,7 @@ import { InputManagerEventMap, INPUT_MANAGER_EVENT } from '../const/input-manage
 import { MotorDriver } from './motor-driver';
 import { SpeakerDriver } from './speaker-driver';
 import { PowerMonitor } from './power-monitor';
+import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -73,8 +74,6 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   private async initialise(): Promise<void> {
     this.log.info('Kernel initialising...');
 
-    this.bindEvents();
-
     try {
       await socketServer.initialise(socketIo(this.httpServer, { pingInterval: env.PING_INTERVAL }));
     } catch (error) {
@@ -90,6 +89,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       this.ledStripDriver.initialise(),
       this.motorDriver.initialise(),
     ]).then(() => {
+      this.bindEvents();
+
       this._initialised = true;
       this.emit(KERNEL_EVENT.INITIALISED, undefined);
     }).catch((error) => {
@@ -189,12 +190,19 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       this.handleTerminated({ exit: true }, 1);
     });
 
+    // Listen for Kernel Events
     this.once(KERNEL_EVENT.INITIALISED, this.handleInitialised.bind(this));
+
+    // Listen for Socket Events
     socketServer.on(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, this.handleClientConnected.bind(this));
     this.inputManager
       .on(INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE, (payload) => setImmediate(() => this.handleDriveInputChanged(payload)))
       .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)))
       .on(INPUT_MANAGER_EVENT.SPEED_INPUT_CHANGE, (payload) => setImmediate(() => this.handleSpeedInputChanged(payload)));
+
+    // Listen for Power Monitor Events
+    this.powerMonitor
+      .on(POWER_MONITOR_EVENT.UPDATE, (payload) => setImmediate(() => this.handlePowerMonitorUpdate(payload)));
   }
 
   /**
@@ -247,5 +255,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handleSpeedInputChanged({ speed }: InputManagerEventMap[INPUT_MANAGER_EVENT['SPEED_INPUT_CHANGE']]) {
     socketServer.sendSpeedInputStatusToClients({ speed });
+  }
+
+  /**
+   * Fired when the power monitor updates
+   */
+  private handlePowerMonitorUpdate(power: PowerMonitorEventMap[POWER_MONITOR_EVENT['UPDATE']]) {
+    socketServer.sendPowerUtilisationStatsToClients({ power });
   }
 }

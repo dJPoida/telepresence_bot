@@ -61,7 +61,7 @@
     "webpack-merge": "^5.2.0"
   },
   "dependencies": {
-    "@djpoida/ina219": "/d/Development/@djpoida/ina219",
+    "@djpoida/ina219": "../@djpoida/ina219",
     "classnames": "^2.2.6",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

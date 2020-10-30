@@ -4,6 +4,7 @@ import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.help
 import { Power } from '../../shared/types/power.type';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
+import { round } from '../../shared/helpers/round.helper';
 
 export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -139,8 +140,8 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
     }
 
     // Calculate the new averages
-    this._averageVoltage = this.voltageSamples.reduce((a, b) => (a + b)) / this.voltageSamples.length;
-    this._averageCurrent = this.currentSamples.reduce((a, b) => (a + b)) / this.currentSamples.length;
+    this._averageVoltage = round(this.voltageSamples.reduce((a, b) => (a + b)) / this.voltageSamples.length, 2);
+    this._averageCurrent = round(this.currentSamples.reduce((a, b) => (a + b)) / this.currentSamples.length, 2);
 
     this.emit(POWER_MONITOR_EVENT.UPDATE, this.power);
   }
