@@ -1,14 +1,16 @@
 import ws281x, { Ws281x } from 'rpi-ws281x-native';
+import { A_COLOUR, COLOUR } from '../../shared/constants/colours.const';
+import { rgbInt2grbInt } from '../../shared/helpers/rgbInt2grbInt';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { LEDStripEventMap, LED_STRIP_EVENT } from '../const/led-strip-event.const';
 import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 
 export type LEDColors = {
-  front: number,
-  right: number,
-  rear: number,
-  left: number
+  front: A_COLOUR | number,
+  right: A_COLOUR | number,
+  rear: A_COLOUR | number,
+  left: A_COLOUR | number
 };
 
 export type LEDPixelCounts = {
@@ -30,7 +32,7 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
   private _brightness: number = env.LED_DEFAULT_BRIGHTNESS;
-  private _ledColors: LEDColors = { front: 0xFF6D00, right: 0xFF6D00, rear: 0xFF6D00, left: 0xFF6D00 };
+  private _ledColors: LEDColors = { front: COLOUR.ORANGE, right: COLOUR.ORANGE, rear: COLOUR.ORANGE, left: COLOUR.ORANGE };
   private _pixelData = new Uint32Array(this.numLEDs);
 
   private _pixelCounts: LEDPixelCounts = {
@@ -111,7 +113,10 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
     // Initialise the ws281x Driver
     this.device.init(this.numLEDs, {});
 
+    this.render();
+
     // Set the Brightness
+    this.log.info(`Setting LED Brightness to ${this.brightness}/255`);
     this.device.setBrightness(this.brightness);
 
     // Let everyone know that the LED Strip is initialised
@@ -165,23 +170,24 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
 
   /**
    * Take the information about the state of the LED strip and update it into the PixelData
+   * The LED strip is also a GRB in stead of RGB assigned strip so it needs tweaking.
    */
   public async render():Promise<void> {
     // Apply the front color
     for (let i = 0; i < this._pixelCounts.front; i += 1) {
-      this._pixelData[i + this._pixelOffsets.front] = this.ledColors.front;
+      this._pixelData[i + this._pixelOffsets.front] = rgbInt2grbInt(this.ledColors.front);
     }
     // apply the right edge color
     for (let i = 0; i < this._pixelCounts.right; i += 1) {
-      this._pixelData[i + this._pixelOffsets.right] = this.ledColors.right;
+      this._pixelData[i + this._pixelOffsets.right] = rgbInt2grbInt(this.ledColors.right);
     }
     // apply the back color
     for (let i = 0; i < this._pixelCounts.rear; i += 1) {
-      this._pixelData[i + this._pixelOffsets.rear] = this.ledColors.rear;
+      this._pixelData[i + this._pixelOffsets.rear] = rgbInt2grbInt(this.ledColors.rear);
     }
     // apply the left edge color
     for (let i = 0; i < this._pixelCounts.left; i += 1) {
-      this._pixelData[i + this._pixelOffsets.left] = this.ledColors.left;
+      this._pixelData[i + this._pixelOffsets.left] = rgbInt2grbInt(this.ledColors.left);
     }
 
     // Update the device
