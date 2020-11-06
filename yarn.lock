@@ -233,6 +233,11 @@
   resolved "https://npm.ciportal.net/@types%2fnode/-/node-10.17.40.tgz#8a50e47daff15fd4a89dc56f5221b3729e506be6"
   integrity sha512-3hZT2z2/531A5pc8hYhn1gU5Qb1SIRSgMLQ6zuHA5xtt16lWAxUGprtr8lJuc9zNJMXEIIBWfSnzqBP/4mglpA==
 
+"@types/node@^12.12.8":
+  version "12.19.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.19.3.tgz#a6e252973214079155f749e8bef99cc80af182fa"
+  integrity sha512-8Jduo8wvvwDzEVJCOvS/G6sgilOLvvhn1eMmK3TW8/T217O7u1jdrK6ImKLv80tVryaPSVeKu6sjDEiFjd4/eg==
+
 "@types/pigpio@^1.2.2":
   version "1.2.2"
   resolved "https://npm.ciportal.net/@types%2fpigpio/-/pigpio-1.2.2.tgz#dfb638acee398b5a1bfb4e13074251c1360be38c"
@@ -896,6 +901,15 @@ async-i2c-bus@^1.1.0:
     bluebird "^3.5.3"
     i2c-bus "^4.0.6"
     typescript "^3.2.2"
+
+async-i2c-bus@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/async-i2c-bus/-/async-i2c-bus-2.0.0.tgz#c547565e556e51b18ec3ced21ca6dbb6c1427087"
+  integrity sha512-EHpH0/tjesf+FXLPNzU+NEBItbtg1b6Kduj8qqeeHfTeTtXPkbXT2EdIsBJwiMikkCQw3+vy+z69Irx3dQOLpg==
+  dependencies:
+    "@types/node" "^12.12.8"
+    i2c-bus "^5.1.0"
+    typescript "^3.7.2"
 
 async-limiter@~1.0.0:
   version "1.0.1"
@@ -3442,7 +3456,7 @@ i2c-bus@^4.0.6:
     bindings "^1.5.0"
     nan "^2.14.0"
 
-i2c-bus@^5.2.0, i2c-bus@^5.2.1:
+i2c-bus@^5.1.0, i2c-bus@^5.2.0, i2c-bus@^5.2.1:
   version "5.2.1"
   resolved "https://npm.ciportal.net/i2c-bus/-/i2c-bus-5.2.1.tgz#ccbfff0a5f431cfcf7f17fb56624774323b7c5fd"
   integrity sha512-ihfUEG8BPbmVkwLJv2vZmvXUNZ8TUCIqnTAVgSwzqH72jouT3HdpJOJCGIwJt8SQ8H7QpefvWqDuT40TnnUELQ==
@@ -6770,7 +6784,7 @@ typedarray@^0.0.6:
   resolved "https://npm.ciportal.net/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@^3.2.2:
+typescript@^3.2.2, typescript@^3.7.2:
   version "3.9.7"
   resolved "https://npm.ciportal.net/typescript/-/typescript-3.9.7.tgz#98d600a5ebdc38f40cb277522f12dc800e9e25fa"
   integrity sha512-BLbiRkiBzAwsjut4x/dsibSTB6yWpwT5qWmC2OfuCg3GgVQCSgMs4vEctYPhsaGtd0AeuuHMkjZ2h2WG8MSzRw==

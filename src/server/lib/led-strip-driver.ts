@@ -1,5 +1,5 @@
 import ws281x, { Ws281x } from 'rpi-ws281x-native';
-import { A_COLOUR, COLOUR } from '../../shared/constants/colours.const';
+import { A_COLOR, COLOR } from '../../shared/constants/colors.const';
 import { rgbInt2grbInt } from '../../shared/helpers/rgbInt2grbInt';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { LEDStripEventMap, LED_STRIP_EVENT } from '../const/led-strip-event.const';
@@ -7,10 +7,10 @@ import { env } from '../env';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 
 export type LEDColors = {
-  front: A_COLOUR | number,
-  right: A_COLOUR | number,
-  rear: A_COLOUR | number,
-  left: A_COLOUR | number
+  front: A_COLOR | number,
+  right: A_COLOR | number,
+  rear: A_COLOR | number,
+  left: A_COLOR | number
 };
 
 export type LEDPixelCounts = {
@@ -32,7 +32,7 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
   private _brightness: number = env.LED_DEFAULT_BRIGHTNESS;
-  private _ledColors: LEDColors = { front: COLOUR.ORANGE, right: COLOUR.ORANGE, rear: COLOUR.ORANGE, left: COLOUR.ORANGE };
+  private _ledColors: LEDColors = { front: COLOR.ORANGE, right: COLOR.ORANGE, rear: COLOR.ORANGE, left: COLOR.ORANGE };
   private _pixelData = new Uint32Array(this.numLEDs);
 
   private _pixelCounts: LEDPixelCounts = {
