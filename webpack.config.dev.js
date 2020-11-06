@@ -6,8 +6,9 @@ const wpMerge = require('webpack-merge');
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
 const packageJson = require('./package.json');
 const entryPoints = require('./webpack.entrypoints');
 const baseConfig = require('./webpack.config.base');
@@ -91,5 +92,21 @@ module.exports = wpMerge.merge(baseConfig, {
     })),
 
     new webpack.HotModuleReplacementPlugin(),
+
+    // Copy other static assets to our dist folder
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'node_modules/react/umd', 'react.development.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/react-dom/umd', 'react-dom.development.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+      ],
+    }),  
   ],
 });

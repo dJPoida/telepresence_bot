@@ -2,17 +2,20 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const wpMerge = require('webpack-merge');
+
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
 const packageJson = require('./package.json');
-const baseConfig = require('./webpack.config.base');
 const entryPoints = require('./webpack.entrypoints');
+const baseConfig = require('./webpack.config.base');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
+const tsConfigPath = path.resolve(__dirname, 'tsconfig.client.prod.json');
 
 const appVersionSuffix = packageJson.version.replace(/\./g, '-');
 
@@ -36,7 +39,9 @@ module.exports = wpMerge.merge(baseConfig, {
         test: /\.ts(x?)$/,
         exclude: /node_modules/,
         loader: 'ts-loader',
-        options: { configFile: 'tsconfig.client.prod.json' },
+        options: {
+          configFile: tsConfigPath
+        },
       },
       {
         test: /\.(scss|css)$/,
@@ -77,5 +82,21 @@ module.exports = wpMerge.merge(baseConfig, {
 
     // Clean the dist directory before performing a production build
     new CleanWebpackPlugin(),
+
+    // Copy other static assets to our dist folder
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'node_modules/react/umd', 'react.production.min.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/react-dom/umd', 'react-dom.production.min.js'),
+          to: 'js',
+          toType: 'dir',
+        },
+      ],
+    }),    
   ],
 });

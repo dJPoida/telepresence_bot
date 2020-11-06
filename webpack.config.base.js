@@ -6,11 +6,13 @@ const webpack = require('webpack');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const { env } = require('process');
+const dotenv = require('dotenv');
 const packageJson = require('./package.json');
 
 const clientSourcePath = path.resolve(__dirname, 'src/client');
 const clientDistPath = path.resolve(__dirname, 'dist/client');
+
+dotenv.config();
 
 module.exports = {
   output: {
@@ -27,7 +29,8 @@ module.exports = {
     new webpack.DefinePlugin({
       // Put: 'client side variables here'
       __VERSION__: JSON.stringify(packageJson.version),
-      __CLIENT_KEY__: JSON.stringify(env.CLIENT_KEY), // TODO: remove and implement proper auth
+      // __CLIENT_KEY__: JSON.stringify(env.CLIENT_KEY), // TODO: remove and implement proper auth
+      __CLIENT_KEY__: JSON.stringify(process.env.CLIENT_KEY), // TODO: remove and implement proper auth
     }),
 
     new CleanWebpackPlugin(),
@@ -38,16 +41,6 @@ module.exports = {
         {
           from: path.join(clientSourcePath, 'public'),
           to: path.join(clientDistPath, 'public'),
-          toType: 'dir',
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/react/umd', 'react.development.js'),
-          to: 'js',
-          toType: 'dir',
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/react-dom/umd', 'react-dom.development.js'),
-          to: 'js',
           toType: 'dir',
         },
       ],
