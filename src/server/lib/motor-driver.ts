@@ -22,6 +22,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   private _initialised = false;
   private speed = 1;
   private i2cBus: null | Bus = null;
+  private pca9685: null | PCA9685 = null;
   private wheels: Record<string, wheelDefinition> = {
     [WHEEL.FRONT_LEFT]: {
       direction: DIRECTION.STATIONARY,
@@ -74,9 +75,9 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
 
   /**
    * returns true if the raspberry pi hardware is available
-   * TODO
+   * (basically if the i2cBus was passed into the constructor)
    */
-  get hardwareAvailable(): boolean { return false; }
+  get hardwareAvailable(): boolean { return !!this.i2cBus; }
 
   /**
    * Bind the event listeners this class cares about
@@ -95,48 +96,42 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   /**
    * Initialise the class
    */
-  public async initialise(): Promise<void> {
+  public async initialise(kernelI2cBus: Bus | null): Promise<void> {
     this.log.info('Motor Driver initialising...');
 
-    // Setup the I2C Bus
-    console.log(` - I2C Bus number ${env.I2C_BUS_NO}`);
-
-    this.i2cBus = new Bus({busNumber: env.I2C_BUS_NO});
-
     // Setup the PCA9685
-    // console.log(` - PCA9685 at address 0x${I2C_ADDRESS.toString(16)} at frequency ${PWM_FREQUENCY}Hz`);
-    // const pca9685 = new PCA9685(bus, { address: I2C_ADDRESS, frequency: PWM_FREQUENCY });
+    if (kernelI2cBus) {
+      console.log(` - PCA9685 at address 0x${env.I2C_ADDRESS_PCA9685.toString(16)} at frequency ${env.MOTOR_PWM_FREQUENCY}Hz`);
+      this.i2cBus = kernelI2cBus;
 
-    // const run = async () => {
-    //     console.log('');
-    //     console.log('Initialisation...');
+      if (this.i2cBus && this.i2cBus.isOpen) {
+        //@ts-ignore
+        this.pca9685 = new PCA9685(this.i2cBus, { address: env.I2C_ADDRESS_PCA9685, frequency: env.MOTOR_PWM_FREQUENCY });
 
-    //     // Setup the motor driver Enable Pins
-    //     console.log(`Assigning the Motor Control pins:`);
-    //     Object.entries(wheels).forEach(([wheel, config]) => {
-    //         if (config.enabled) {
-    //             console.log(`   - ${config.name}: ${config.direction === DIRECTION_FORWARD ? 'Forward' : 'Reverse'} (${config.dirPin1No} = ${config.direction === DIRECTION_FORWARD ? 0 : 1} / ${config.dirPin2No} = ${config.direction === DIRECTION_FORWARD ? 1 : 0})`);
-    //             config.dirPin1 = new Gpio(config.dirPin1No, 'out');
-    //             config.dirPin2 = new Gpio(config.dirPin2No, 'out');
-    //         };
-    //     })
-
-    //     console.log('opening the I2C Bus...');
-    //     await bus.open();
-
-    //     console.log('init PCA9685...');
-    //     await pca9685.init();
-
-    //     console.log('');
-    //     console.log('Running...');
-    //     Object.entries(wheels).forEach(async ([wheel, config]) => {
-    //         if (config.enabled) {
-    //             config.dirPin1.writeSync(config.direction === DIRECTION_FORWARD ? 0 : 1);
-    //             config.dirPin2.writeSync(config.direction === DIRECTION_FORWARD ? 1 : 0);
-    //             await pca9685.set_pwm(config.pwmChannel, 0, MAX_PWM);
-    //         };
-    //     });
-    // }
+        // Setup the motor driver Enable Pins
+        console.log(` - Assigning the Motor Control pins:`);
+        Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
+          wheelConfig.gpioForward = new Gpio(wheelConfig.pinNoForward, {mode: Gpio.OUTPUT});
+          wheelConfig.gpioReverse = new Gpio(wheelConfig.pinNoReverse, {mode: Gpio.OUTPUT});
+        })
+    
+        console.log(' - init PCA9685...');
+        await this.pca9685.init();
+    
+        //     console.log('');
+        //     console.log('Running...');
+        //     Object.entries(wheels).forEach(async ([wheel, config]) => {
+        //         if (config.enabled) {
+        //             config.dirPin1.writeSync(config.direction === DIRECTION_FORWARD ? 0 : 1);
+        //             config.dirPin2.writeSync(config.direction === DIRECTION_FORWARD ? 1 : 0);
+        //             await pca9685.set_pwm(config.pwmChannel, 0, MAX_PWM);
+        //         };
+        //     });
+      }
+    } else {
+      // no i2cBus - hardware not available
+      console.log(` - PCA9685: No I2C hardware available. Skipping.`);
+    }
 
     // Let everyone know that the Motor Driver is initialised
     this._initialised = true;
@@ -151,25 +146,22 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
 
     if (this.initialised) {
       this.log.info('Motor Driver shutting down...');
-      // TODO: shutdown the Motor Driver
 
-      //         // Teardown the Enable Pins
-      //         console.log(' - Motor Control Enable Pins');
-      //         Object.entries(wheels).forEach(([wheel, config]) => {
-      //             if (config.enabled) {
-      //                 config.dirPin1.writeSync(0);
-      //                 config.dirPin2.writeSync(0);
-      //                 config.dirPin1.unexport();
-      //                 config.dirPin2.unexport();
-      //             }
-      //         })
+      // Teardown the Enable Pins
+      console.log(' - Motor Control Enable Pins');
+      Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
+        if (wheelConfig.gpioForward) {
+          wheelConfig.gpioForward.pwmWrite(0);
+        }
+        if (wheelConfig.gpioReverse) {
+          wheelConfig.gpioReverse.pwmWrite(0);
+        }
+      })
 
-      //         console.log(' - PCA9685');
-      //         await pca9685.shutdown_all();
-
-      //         console.log(' - I2C Bus');
-      //         await bus.close();
-      //     }
+      console.log(' - PCA9685');
+      if (this.pca9685) {
+        await this.pca9685.shutdown_all();
+      }
     }
   }
 

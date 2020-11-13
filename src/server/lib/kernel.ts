@@ -13,6 +13,7 @@ import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-serve
 import { BotStatusDto } from '../../shared/types/bot-status.dto.type';
 import { InputManagerEventMap, INPUT_MANAGER_EVENT } from '../const/input-manager-event.const';
 import { MotorDriver } from './motor-driver';
+import { I2cDriver } from './i2c-driver';
 import { SpeakerDriver } from './speaker-driver';
 import { PowerMonitor } from './power-monitor';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
@@ -23,6 +24,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly expressApp: Express;
 
   public readonly httpServer: http.Server;
+  
+  public readonly i2cDriver: I2cDriver;
 
   public readonly ledStripDriver: LEDStripDriver;
 
@@ -46,6 +49,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     this.expressApp = expressApp;
     this.httpServer = httpServer;
+    this.i2cDriver = new I2cDriver();
     this.inputManager = new InputManager();
     this.ledStripDriver = new LEDStripDriver();
     this.motorDriver = new MotorDriver();
@@ -82,12 +86,22 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       process.exit(1);
     }
 
+    // spin up the i2c driver
+    try {
+      await this.i2cDriver.initialise();
+    } catch (error) {
+      this.log.error(error);
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
+    }
+
+    // spin up all of the other drivers
     Promise.all([
       this.speakerDriver.initialise(),
       this.powerMonitor.initialise(),
       this.inputManager.initialise(),
       this.ledStripDriver.initialise(),
-      this.motorDriver.initialise(),
+      this.motorDriver.initialise(this.i2cDriver.i2cBus),
     ]).then(() => {
       this.bindEvents();
 
@@ -145,6 +159,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
         await this.powerMonitor.shutDown();
       } catch (error) {
         this.log.error(`Error while shutting down the Power Monitor: ${error}`);
+      }
+
+      try {
+        await this.i2cDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the i2c Driver: ${error}`);
       }
     }
   }
@@ -224,7 +244,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     if (options.exit) {
       // eslint-disable-next-line no-process-exit
-      process.exit(exitCode || 0);
+      process.nextTick(() => { process.exit(exitCode || 0); });
     }
   }
 
