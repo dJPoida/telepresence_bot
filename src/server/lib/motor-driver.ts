@@ -25,7 +25,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   private pca9685: null | PCA9685 = null;
   private wheels: Record<string, wheelDefinition> = {
     [WHEEL.FRONT_LEFT]: {
-      direction: DIRECTION.STATIONARY,
+      direction: DIRECTION.FORWARD,
       pwmChannel: env.MOTOR_FL_PWM_CHANNEL,
       pinNoForward: env.MOTOR_FL_DIR_PIN_FORWARD,
       pinNoReverse: env.MOTOR_FL_DIR_PIN_REVERSE,
@@ -33,7 +33,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       gpioReverse: null,
     },
     [WHEEL.FRONT_RIGHT]: {
-      direction: DIRECTION.STATIONARY,
+      direction: DIRECTION.FORWARD,
       pwmChannel: env.MOTOR_FR_PWM_CHANNEL,
       pinNoForward: env.MOTOR_FR_DIR_PIN_FORWARD,
       pinNoReverse: env.MOTOR_FR_DIR_PIN_REVERSE,
@@ -41,7 +41,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       gpioReverse: null,
     },
     [WHEEL.REAR_LEFT]: {
-      direction: DIRECTION.STATIONARY,
+      direction: DIRECTION.FORWARD,
       pwmChannel: env.MOTOR_RL_PWM_CHANNEL,
       pinNoForward: env.MOTOR_RL_DIR_PIN_FORWARD,
       pinNoReverse: env.MOTOR_RL_DIR_PIN_REVERSE,
@@ -49,7 +49,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       gpioReverse: null,
     },
     [WHEEL.REAR_RIGHT]: {
-      direction: DIRECTION.STATIONARY,
+      direction: DIRECTION.FORWARD,
       pwmChannel: env.MOTOR_RR_PWM_CHANNEL,
       pinNoForward: env.MOTOR_RR_DIR_PIN_FORWARD,
       pinNoReverse: env.MOTOR_RR_DIR_PIN_REVERSE,
@@ -118,15 +118,21 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
         console.log(' - init PCA9685...');
         await this.pca9685.init();
     
-        //     console.log('');
-        //     console.log('Running...');
-        //     Object.entries(wheels).forEach(async ([wheel, config]) => {
-        //         if (config.enabled) {
-        //             config.dirPin1.writeSync(config.direction === DIRECTION_FORWARD ? 0 : 1);
-        //             config.dirPin2.writeSync(config.direction === DIRECTION_FORWARD ? 1 : 0);
-        //             await pca9685.set_pwm(config.pwmChannel, 0, MAX_PWM);
-        //         };
-        //     });
+        // console.log(' # ');
+        // console.log(' # Test Run...');
+        // Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
+        //   if (wheelConfig.gpioForward) {
+        //     console.log(` # Setting GPIO ${wheelConfig.pinNoForward} to ${wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0}`);
+        //     wheelConfig.gpioForward.digitalWrite(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
+        //   }
+        //   if (wheelConfig.gpioReverse) {
+        //     console.log(` # Setting GPIO ${wheelConfig.pinNoReverse} to ${wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0}`);
+        //     wheelConfig.gpioReverse.digitalWrite(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
+        //   }
+        //   if (this.pca9685) {
+        //     await this.pca9685.set_pwm(wheelConfig.pwmChannel, 0, env.MOTOR_MIN_PWM);
+        //   }
+        // });
       }
     } else {
       // no i2cBus - hardware not available

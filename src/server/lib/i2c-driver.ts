@@ -52,7 +52,7 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
     // Setup the I2C Bus
     console.log(` - I2C Bus number ${env.I2C_BUS_NO}`);
     try {
-      this.i2cBus = new Bus({busNumber: env.I2C_BUS_NO});
+      this.i2cBus = await Bus.createAndOpen({busNumber: env.I2C_BUS_NO});
     } catch (err) {
       this.i2cBus = null;
       this.log.error('Failed to initialise the I2C bus', err);
