@@ -261,6 +261,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handleDriveInputChanged({ drive }: InputManagerEventMap[INPUT_MANAGER_EVENT['DRIVE_INPUT_CHANGE']]) {
     socketServer.sendDriveInputStatusToClients({ drive });
+    this.motorDriver.setDriveInput(drive);
   }
 
   /**
@@ -275,6 +276,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handleSpeedInputChanged({ speed }: InputManagerEventMap[INPUT_MANAGER_EVENT['SPEED_INPUT_CHANGE']]) {
     socketServer.sendSpeedInputStatusToClients({ speed });
+    this.motorDriver.setSpeed(speed);
   }
 
   /**
