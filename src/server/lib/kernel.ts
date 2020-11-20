@@ -24,7 +24,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly expressApp: Express;
 
   public readonly httpServer: http.Server;
-  
+
   public readonly i2cDriver: I2cDriver;
 
   public readonly ledStripDriver: LEDStripDriver;
@@ -214,7 +214,9 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.once(KERNEL_EVENT.INITIALISED, this.handleInitialised.bind(this));
 
     // Listen for Socket Events
-    socketServer.on(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, this.handleClientConnected.bind(this));
+    socketServer
+      .on(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, this.handleClientConnected.bind(this))
+      .on(SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED, this.handleClientDisconnected.bind(this));
     this.inputManager
       .on(INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE, (payload) => setImmediate(() => this.handleDriveInputChanged(payload)))
       .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)))
@@ -254,6 +256,14 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   private handleClientConnected({ socket }: SocketServerEventMap[SOCKET_SERVER_EVENT['CLIENT_CONNECTED']]) {
     // Send an update directly to the socket with the status of the bot
     socketServer.sendBotStatusToClients(this.botStatusDto, socket);
+  }
+
+  /**
+   * Fired when a client disconnects
+   */
+  private handleClientDisconnected({ socket }: SocketServerEventMap[SOCKET_SERVER_EVENT['CLIENT_DISCONNECTED']]) {
+    // TODO: This needs to only happen when the socket that was disconnected is the remote controller socket
+    this.motorDriver.stop();
   }
 
   /**

@@ -1,5 +1,5 @@
-import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { Bus } from 'async-i2c-bus';
+import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { I2CDriverEventMap, I2C_DRIVER_EVENT } from '../const/i2c-driver-event.const';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { env } from '../env';
@@ -27,7 +27,7 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
   /**
    * returns true if the raspberry pi hardware is available
    */
-  get hardwareAvailable(): boolean { return !!!this.i2cBus; }
+  get hardwareAvailable(): boolean { return !this.i2cBus; }
 
   /**
    * Bind the event listeners this class cares about
@@ -52,7 +52,7 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
     // Setup the I2C Bus
     console.log(` - I2C Bus number ${env.I2C_BUS_NO}`);
     try {
-      this.i2cBus = await Bus.createAndOpen({busNumber: env.I2C_BUS_NO});
+      this.i2cBus = await Bus.createAndOpen({ busNumber: env.I2C_BUS_NO });
     } catch (err) {
       this.i2cBus = null;
       this.log.error('Failed to initialise the I2C bus', err);
