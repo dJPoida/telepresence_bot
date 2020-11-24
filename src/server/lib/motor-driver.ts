@@ -18,8 +18,8 @@ type wheelDefinition = {
   pinNoReverse: number,
   gpioForward: null | Gpio,
   gpioReverse: null | Gpio,
-  targetPWM: number,
-  actualPWM: number,
+  targetSpeed: number,
+  actualSpeed: number,
 }
 
 const UPDATE_INTERVAL_MS = 50;
@@ -40,8 +40,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       pinNoReverse: env.MOTOR_FL_DIR_PIN_REVERSE,
       gpioForward: null,
       gpioReverse: null,
-      targetPWM: 0,
-      actualPWM: 0,
+      targetSpeed: 0,
+      actualSpeed: 0,
     },
     [WHEEL.FRONT_RIGHT]: {
       direction: DIRECTION.STATIONARY,
@@ -50,8 +50,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       pinNoReverse: env.MOTOR_FR_DIR_PIN_REVERSE,
       gpioForward: null,
       gpioReverse: null,
-      targetPWM: 0,
-      actualPWM: 0,
+      targetSpeed: 0,
+      actualSpeed: 0,
     },
     [WHEEL.REAR_LEFT]: {
       direction: DIRECTION.STATIONARY,
@@ -60,8 +60,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       pinNoReverse: env.MOTOR_RL_DIR_PIN_REVERSE,
       gpioForward: null,
       gpioReverse: null,
-      targetPWM: 0,
-      actualPWM: 0,
+      targetSpeed: 0,
+      actualSpeed: 0,
     },
     [WHEEL.REAR_RIGHT]: {
       direction: DIRECTION.STATIONARY,
@@ -70,8 +70,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       pinNoReverse: env.MOTOR_RR_DIR_PIN_REVERSE,
       gpioForward: null,
       gpioReverse: null,
-      targetPWM: 0,
-      actualPWM: 0,
+      targetSpeed: 0,
+      actualSpeed: 0,
     },
   }
 
@@ -100,6 +100,11 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    * Returns true if the update interval is not set
    */
   get isSleeping(): boolean { return this.updateInterval === null; }
+
+  /**
+   * Returns true if the update interval is not set
+   */
+  get isAwake(): boolean { return this.updateInterval !== null; }
 
   /**
    * Bind the event listeners this class cares about
@@ -134,7 +139,9 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
         console.log(' - Assigning the Motor Control pins:');
         Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
           wheelConfig.gpioForward = new Gpio(wheelConfig.pinNoForward, { mode: Gpio.OUTPUT });
+          wheelConfig.gpioForward.digitalWrite(0);
           wheelConfig.gpioReverse = new Gpio(wheelConfig.pinNoReverse, { mode: Gpio.OUTPUT });
+          wheelConfig.gpioReverse.digitalWrite(0);
         });
 
         console.log(' - init PCA9685...');
@@ -175,17 +182,21 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
     if (this.initialised) {
       this.log.info('Motor Driver shutting down...');
 
+      // Stop updating the motors
+      if (this.updateInterval) {
+        this.log.debug(' - Update Interval');
+        clearInterval(this.updateInterval);
+        this.updateInterval = null;
+      }
+  
       // Teardown the Enable Pins
       console.log(' - Motor Control Enable Pins');
-      Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
-        if (wheelConfig.gpioForward) {
-          wheelConfig.gpioForward.pwmWrite(0);
-        }
-        if (wheelConfig.gpioReverse) {
-          wheelConfig.gpioReverse.pwmWrite(0);
-        }
+      Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(0);
       });
 
+      // Teardown the PCA9685 PWM channels
       console.log(' - PCA9685');
       if (this.pca9685) {
         await this.pca9685.shutdown_all();
@@ -205,7 +216,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    */
   public setDriveInput(drive: XYCoordinate): void {
     this.driveInput = drive;
-    this.calculateTargetPWMs();
+    this.calculateTargets();
   }
 
   /**
@@ -213,7 +224,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    */
   public setSpeed(speed: number): void {
     this.speed = constrain(speed, 0, 100);
-    this.calculateTargetPWMs();
+    this.calculateTargets();
   }
 
   /**
@@ -221,7 +232,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    */
   public stop(): void {
     this.driveInput = { x: 0, y: 0 };
-    this.calculateTargetPWMs();
+    this.calculateTargets();
   }
 
   /**
@@ -243,35 +254,39 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
     }
+    this.update();
   }
 
   /**
-   * Using the input data and other factors, calculate the target PWMs for each wheel
+   * Using the input data and other factors, calculate the target speeds for each wheel
+   * 
+   * @see http://home.kendra.com/mauser/joystick.html
    */
-  private calculateTargetPWMs() {
-    // TODO: This is ALL temporary until the direction control is accounted for
+  private calculateTargets() {
+    const oldTargetSpeed_FL = this.wheels[WHEEL.FRONT_LEFT].targetSpeed;
+    const oldTargetSpeed_FR = this.wheels[WHEEL.FRONT_RIGHT].targetSpeed;
+    const oldTargetSpeed_RL = this.wheels[WHEEL.REAR_LEFT].targetSpeed;
+    const oldTargetSpeed_RR = this.wheels[WHEEL.REAR_RIGHT].targetSpeed;
 
-    const oldTargetPWM_FL = this.wheels[WHEEL.FRONT_LEFT].targetPWM;
-    const oldTargetPWM_FR = this.wheels[WHEEL.FRONT_RIGHT].targetPWM;
-    const oldTargetPWM_RL = this.wheels[WHEEL.REAR_LEFT].targetPWM;
-    const oldTargetPWM_RR = this.wheels[WHEEL.REAR_RIGHT].targetPWM;
+    const x = this.driveInput.x * -1;
+    const y = this.driveInput.y;
 
-    // TODO: factor in X
-    const leftEffectiveSpeed = (this.driveInput.y * (this.speed / 100));
-    const rightEffectiveSpeed = (this.driveInput.y * (this.speed / 100));
+    const v = (100 - Math.abs(x)) * (y / 100) + y;
+    const w = (100 - Math.abs(y)) * (x / 100) + x;
+   
+    const targetLeftSpeed = (((v - w) / 2) * (this.speed / 100));
+    const targetRightSpeed = (((v + w) / 2) * (this.speed / 100));
 
-    console.log(`speed: ${leftEffectiveSpeed / rightEffectiveSpeed}`);
-
-    this.wheels[WHEEL.FRONT_LEFT].targetPWM = leftEffectiveSpeed > 0 ? map(leftEffectiveSpeed, 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM) : 0;
-    this.wheels[WHEEL.FRONT_RIGHT].targetPWM = rightEffectiveSpeed > 0 ? map(rightEffectiveSpeed, 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM) : 0;
-    this.wheels[WHEEL.REAR_LEFT].targetPWM = leftEffectiveSpeed > 0 ? map(leftEffectiveSpeed, 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM) : 0;
-    this.wheels[WHEEL.REAR_RIGHT].targetPWM = rightEffectiveSpeed > 0 ? map(rightEffectiveSpeed, 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM) : 0;
+    this.wheels[WHEEL.FRONT_LEFT].targetSpeed = targetLeftSpeed;
+    this.wheels[WHEEL.FRONT_RIGHT].targetSpeed = targetRightSpeed;
+    this.wheels[WHEEL.REAR_LEFT].targetSpeed = targetLeftSpeed;
+    this.wheels[WHEEL.REAR_RIGHT].targetSpeed = targetRightSpeed;
 
     const changed = (
-      (oldTargetPWM_FL !== this.wheels[WHEEL.FRONT_LEFT].targetPWM)
-      || (oldTargetPWM_FR !== this.wheels[WHEEL.FRONT_RIGHT].targetPWM)
-      || (oldTargetPWM_RL !== this.wheels[WHEEL.REAR_LEFT].targetPWM)
-      || (oldTargetPWM_RR !== this.wheels[WHEEL.REAR_RIGHT].targetPWM)
+      (oldTargetSpeed_FL !== this.wheels[WHEEL.FRONT_LEFT].targetSpeed)
+      || (oldTargetSpeed_FR !== this.wheels[WHEEL.FRONT_RIGHT].targetSpeed)
+      || (oldTargetSpeed_RL !== this.wheels[WHEEL.REAR_LEFT].targetSpeed)
+      || (oldTargetSpeed_RR !== this.wheels[WHEEL.REAR_RIGHT].targetSpeed)
     );
 
     // Wake up the motor controller if it needs to start updating
@@ -285,29 +300,58 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
    * and apply the PWMs to the motors
    */
   private update() {
-    let nothingHappening = true;
+    let somethingChanged = false;
 
-    const acceleration = 0.1;
+    const acceleration = 10;
 
     Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
-      let newActualPWM = wheelConfig.actualPWM + ((wheelConfig.targetPWM - wheelConfig.actualPWM) * acceleration);
-      newActualPWM = constrain(newActualPWM, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM);
-      if (wheelConfig.targetPWM === 0 && wheelConfig.actualPWM <= (env.MOTOR_MIN_PWM + 1)) {
-        wheelConfig.actualPWM = 0;
-      } else {
-        wheelConfig.actualPWM = newActualPWM;
-        nothingHappening = false;
+      const { actualSpeed, targetSpeed } = wheelConfig;
+      
+      let newActualSpeed = 0;
+
+      let sign = 0;
+      if (targetSpeed !== actualSpeed) {
+        sign = targetSpeed > actualSpeed ? 1 : -1;
       }
 
-      if (this.pca9685) await this.pca9685.set_pwm(wheelConfig.pwmChannel, 0, wheelConfig.actualPWM);
+      newActualSpeed = actualSpeed + (acceleration * sign);
+      
+      // If the sign is zero - the is no change to the actual speed.
+      // But if the actual speed doesn't = zero, we need to shut it down
+      if (sign === 0 && wheelConfig.actualSpeed !== newActualSpeed) {
+        somethingChanged = true;
+        
+        // Shut it down
+        wheelConfig.direction = DIRECTION.STATIONARY;
+        wheelConfig.actualSpeed = 0;
+        if (this.pca9685) await this.pca9685.shutdown(wheelConfig.pwmChannel);
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(0);
+      }
+      
+      // If there need to be a change to the wheel speed
+      else if (wheelConfig.actualSpeed !== newActualSpeed) {
+        somethingChanged = true;
 
-      // Determine the direction pins from the current actual PWM to write
-      wheelConfig.direction = (wheelConfig.actualPWM === 0) ? DIRECTION.STATIONARY : ((wheelConfig.actualPWM > 0) ? DIRECTION.FORWARD : DIRECTION.REVERSE);
-      if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
-      if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
+        // Prevent the new actual speed from oscilating around zero
+        if (targetSpeed === 0 && (newActualSpeed < acceleration) && (newActualSpeed > -acceleration)) {
+          newActualSpeed = 0;
+        }
+
+        // Prevent the new actual speed from exceeding the constraints
+        newActualSpeed = constrain(newActualSpeed, -100, 100);
+        
+        wheelConfig.actualSpeed = newActualSpeed;
+        console.log(`targetSpeed: ${wheelConfig.targetSpeed}, actualSpeed: ${wheelConfig.actualSpeed}, PWM: ${map(Math.abs(wheelConfig.actualSpeed), 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM)}`);
+        if (this.pca9685) await this.pca9685.set_pwm(wheelConfig.pwmChannel, 0, map(Math.abs(wheelConfig.actualSpeed), 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM));
+        // Determine the direction pins from the current actual PWM to write
+        wheelConfig.direction = (wheelConfig.actualSpeed === 0) ? DIRECTION.STATIONARY : ((wheelConfig.actualSpeed > 0) ? DIRECTION.FORWARD : DIRECTION.REVERSE);
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
+      }
     });
 
-    // sleep if the targetPWMs and ActualPWMs all = 0
-    if (nothingHappening) this.sleep();
+    // sleep if the targetSpeeds and actualSpeeds all = 0
+    if (this.isAwake && !somethingChanged) this.sleep();
   }
 }
