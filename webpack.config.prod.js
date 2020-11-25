@@ -40,15 +40,13 @@ module.exports = wpMerge.merge(baseConfig, {
         exclude: /node_modules/,
         loader: 'ts-loader',
         options: {
-          configFile: tsConfigPath
+          configFile: tsConfigPath,
         },
       },
       {
         test: /\.(scss|css)$/,
         use: [
-          {
-            loader: MiniCssExtractPlugin.loader,
-          },
+          MiniCssExtractPlugin.loader,
           {
             loader: 'css-loader',
             options: {
@@ -83,6 +81,11 @@ module.exports = wpMerge.merge(baseConfig, {
     // Clean the dist directory before performing a production build
     new CleanWebpackPlugin(),
 
+    // Extract the compiled CSS for each entry point into an external file
+    new MiniCssExtractPlugin({
+      filename: 'css/[name].css',
+    }),
+
     // Copy other static assets to our dist folder
     new CopyWebpackPlugin({
       patterns: [
@@ -97,6 +100,6 @@ module.exports = wpMerge.merge(baseConfig, {
           toType: 'dir',
         },
       ],
-    }),    
+    }),
   ],
 });

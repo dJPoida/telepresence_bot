@@ -56,10 +56,7 @@ module.exports = wpMerge.merge(baseConfig, {
       {
         test: /\.(scss|css)$/,
         use: [
-          'css-hot-loader',
-          {
-            loader: MiniCssExtractPlugin.loader,
-          },
+          'style-loader',
           {
             loader: 'css-loader',
             options: {
@@ -107,6 +104,6 @@ module.exports = wpMerge.merge(baseConfig, {
           toType: 'dir',
         },
       ],
-    }),  
+    }),
   ],
 });

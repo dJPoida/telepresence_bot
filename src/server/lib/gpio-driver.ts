@@ -1,14 +1,14 @@
-import { PromisifiedBus } from 'i2c-bus';
+import { pigpio, Pigpio } from 'node-pigpio-if';
 import { openPromisified } from './wrappers/i2c.mock';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
-import { I2CDriverEventMap, I2C_DRIVER_EVENT } from '../const/i2c-driver-event.const';
+import { GPIODriverEventMap, GPIO_DRIVER_EVENT } from '../const/gpio-driver-event.const';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { env } from '../env';
 
-export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
+export class GPIODriver extends TypedEventEmitter<GPIODriverEventMap> {
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
-  public i2cBus: null | PromisifiedBus = null;
+  public pigpio: null | Pigpio = null;
 
   /**
    * @constructor
@@ -21,50 +21,45 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
   }
 
   /**
-   * Whether the i2c Driver has been initialised
+   * Whether the gpio Driver has been initialised
    */
   get initialised(): boolean { return this._initialised; }
 
   /**
    * returns true if the raspberry pi hardware is available
    */
-  get hardwareAvailable(): boolean { return !this.i2cBus; }
+  get hardwareAvailable(): boolean { return !this.pigpio; }
 
   /**
    * Bind the event listeners this class cares about
    */
   private bindEvents(): void {
-    this.once(I2C_DRIVER_EVENT.INITIALISED, this.handleInitialised);
+    this.once(GPIO_DRIVER_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
    * Unbind the event listeners this class cares about
    */
   private unbindEvents(): void {
-    this.off(I2C_DRIVER_EVENT.INITIALISED, this.handleInitialised);
+    this.off(GPIO_DRIVER_EVENT.INITIALISED, this.handleInitialised);
   }
 
   /**
    * Initialise the class
    */
   public async initialise(): Promise<void> {
-    this.log.info('i2c Driver initialising...');
+    this.log.info('GPIO Driver initialising...');
 
-    // Setup the I2C Bus
-    this.log.info(` - I2C Bus number ${env.I2C_BUS_NO}`);
+    // Setup the connection to the gpio daemon
     try {
-      const newI2CBus = await openPromisified(env.I2C_BUS_NO);
-      if (newI2CBus === false) {
-        throw new Error('Perhaps this device is not capable?');
-      }
-      this.i2cBus = newI2CBus;
+      this.pigpio = await pigpio();
     } catch (err) {
-      this.log.error('Failed to initialise the I2C bus', err);
+      this.log.error('Failed to initialise a connection to the the GPIO daemon', err);
     }
 
-    // Let everyone know that the i2c Driver is initialised
+    // Let everyone know that the gpio Driver is initialised
     this._initialised = true;
-    this.emit(I2C_DRIVER_EVENT.INITIALISED, undefined);
+    this.emit(GPIO_DRIVER_EVENT.INITIALISED, undefined);
   }
 
   /**
@@ -74,12 +69,12 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
     this.unbindEvents();
 
     if (this.initialised) {
-      this.log.info('i2c Driver shutting down...');
+      this.log.info('gpio Driver shutting down...');
 
-      if (this.i2cBus) {
+      if (this.pigpio) {
         try {
-          await this.i2cBus.close();
-          this.i2cBus = null;
+          await this.pigpio.close();
+          this.pigpio = null;
         } catch {
           // sink
         }
@@ -91,6 +86,6 @@ export class I2cDriver extends TypedEventEmitter<I2CDriverEventMap> {
    * Fired when this class is initialised
    */
   private handleInitialised() {
-    this.log.info('i2c Driver Initialised.');
+    this.log.info('GPIO Driver Initialised.');
   }
 }

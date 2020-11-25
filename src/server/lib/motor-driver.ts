@@ -1,8 +1,6 @@
-import { Gpio } from 'pigpio';
-import { Bus } from 'async-i2c-bus';
-import { PCA9685 } from 'pca9685-promise';
+import { Gpio, Pigpio } from 'node-pigpio-if/dist/types';
+import { PromisifiedBus } from 'i2c-bus';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
-import { map } from '../../shared/helpers/map.helper';
 import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { MotorDriverEventMap, MOTOR_DRIVER_EVENT } from '../const/motor-driver-event.const';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
@@ -10,6 +8,8 @@ import { WHEEL } from '../../shared/constants/wheel.const';
 import { DIRECTION, A_DIRECTION } from '../../shared/constants/direction.const';
 import { env } from '../env';
 import { constrain } from '../../shared/helpers/constrain.helper';
+import { asyncPca9685, Pca9685Driver } from './wrappers/async-pca9685';
+import { map } from '../../shared/helpers/map.helper';
 
 type wheelDefinition = {
   direction: A_DIRECTION,
@@ -29,8 +29,9 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   private _initialised = false;
   private driveInput: XYCoordinate = { x: 0, y: 0 };
   private speed = 1;
-  private i2cBus: null | Bus = null;
-  private pca9685: null | PCA9685 = null;
+  private i2cBus: null | PromisifiedBus = null;
+  private pigpio: null | Pigpio = null;
+  private pca9685: null | Pca9685Driver = null;
   private updateInterval: null | ReturnType<typeof setInterval> = null;
   private wheels: Record<string, wheelDefinition> = {
     [WHEEL.FRONT_LEFT]: {
@@ -123,49 +124,44 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   /**
    * Initialise the class
    */
-  public async initialise(kernelI2cBus: Bus | null): Promise<void> {
+  public async initialise(kernelI2cBus: PromisifiedBus | null, kernelPigpio: Pigpio | null): Promise<void> {
     this.log.info('Motor Driver initialising...');
 
     // Setup the PCA9685
-    if (kernelI2cBus) {
-      console.log(` - PCA9685 at address 0x${env.I2C_ADDRESS_PCA9685.toString(16)} at frequency ${env.MOTOR_PWM_FREQUENCY}Hz`);
+    if (kernelI2cBus && kernelPigpio) {
+      this.log.info(` - PCA9685 at address 0x${env.I2C_ADDRESS_PCA9685.toString(16)} at frequency ${env.MOTOR_PWM_FREQUENCY}Hz`);
       this.i2cBus = kernelI2cBus;
+      this.pigpio = kernelPigpio;
 
-      if (this.i2cBus && this.i2cBus.isOpen) {
-        // @ts-ignore
-        this.pca9685 = new PCA9685(this.i2cBus, { address: env.I2C_ADDRESS_PCA9685, frequency: env.MOTOR_PWM_FREQUENCY });
-
-        // Setup the motor driver Enable Pins
-        console.log(' - Assigning the Motor Control pins:');
-        Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
-          wheelConfig.gpioForward = new Gpio(wheelConfig.pinNoForward, { mode: Gpio.OUTPUT });
-          wheelConfig.gpioForward.digitalWrite(0);
-          wheelConfig.gpioReverse = new Gpio(wheelConfig.pinNoReverse, { mode: Gpio.OUTPUT });
-          wheelConfig.gpioReverse.digitalWrite(0);
+      if (this.i2cBus) {
+        const newPca9685Driver: Error | Pca9685Driver = await asyncPca9685({
+          i2c: this.i2cBus.bus(),
+          address: env.I2C_ADDRESS_PCA9685,
+          frequency: env.MOTOR_PWM_FREQUENCY,
         });
 
-        console.log(' - init PCA9685...');
-        await this.pca9685.init();
+        this.log.info(' - init PCA9685...');
+        if (!(newPca9685Driver instanceof Error)) {
+          this.pca9685 = newPca9685Driver;
 
-        // console.log(' # ');
-        // console.log(' # Test Run...');
-        // Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
-        //   if (wheelConfig.gpioForward) {
-        //     console.log(` # Setting GPIO ${wheelConfig.pinNoForward} to ${wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0}`);
-        //     wheelConfig.gpioForward.digitalWrite(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
-        //   }
-        //   if (wheelConfig.gpioReverse) {
-        //     console.log(` # Setting GPIO ${wheelConfig.pinNoReverse} to ${wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0}`);
-        //     wheelConfig.gpioReverse.digitalWrite(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
-        //   }
-        //   if (this.pca9685) {
-        //     await this.pca9685.set_pwm(wheelConfig.pwmChannel, 0, env.MOTOR_MIN_PWM);
-        //   }
-        // });
+          // Setup the motor driver Enable Pins
+          this.log.info(' - Assigning the Motor Control pins:');
+          Object.entries(this.wheels).forEach(([wheelId, wheelConfig]) => {
+            if (this.pigpio) {
+              wheelConfig.gpioForward = this.pigpio.gpio(wheelConfig.pinNoForward);
+              wheelConfig.gpioForward.write(0);
+              wheelConfig.gpioReverse = this.pigpio.gpio(wheelConfig.pinNoReverse);
+              wheelConfig.gpioReverse.write(0);
+            }
+          });
+        } else {
+          // no PCA9685 - hardware not available
+          this.log.error(' - PCA9685: Problem initialising the PCA9685: ', newPca9685Driver);
+        }
       }
     } else {
       // no i2cBus - hardware not available
-      console.log(' - PCA9685: No I2C hardware available. Skipping.');
+      this.log.warn(' - PCA9685: No I2C hardware available. Skipping.');
     }
 
     // Let everyone know that the Motor Driver is initialised
@@ -188,18 +184,18 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
         clearInterval(this.updateInterval);
         this.updateInterval = null;
       }
-  
-      // Teardown the Enable Pins
-      console.log(' - Motor Control Enable Pins');
+
+      // Tear down the Enable Pins
+      this.log.info(' - Motor Control Enable Pins');
       Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
-        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(0);
-        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(0);
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.write(0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.write(0);
       });
 
-      // Teardown the PCA9685 PWM channels
-      console.log(' - PCA9685');
+      // Tear down the PCA9685 PWM channels
+      this.log.info(' - PCA9685');
       if (this.pca9685) {
-        await this.pca9685.shutdown_all();
+        this.pca9685.dispose();
       }
     }
   }
@@ -259,7 +255,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
 
   /**
    * Using the input data and other factors, calculate the target speeds for each wheel
-   * 
+   *
    * @see http://home.kendra.com/mauser/joystick.html
    */
   private calculateTargets() {
@@ -269,11 +265,11 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
     const oldTargetSpeed_RR = this.wheels[WHEEL.REAR_RIGHT].targetSpeed;
 
     const x = this.driveInput.x * -1;
-    const y = this.driveInput.y;
+    const { y } = this.driveInput;
 
     const v = (100 - Math.abs(x)) * (y / 100) + y;
     const w = (100 - Math.abs(y)) * (x / 100) + x;
-   
+
     const targetLeftSpeed = (((v - w) / 2) * (this.speed / 100));
     const targetRightSpeed = (((v + w) / 2) * (this.speed / 100));
 
@@ -306,7 +302,7 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
 
     Object.entries(this.wheels).forEach(async ([wheelId, wheelConfig]) => {
       const { actualSpeed, targetSpeed } = wheelConfig;
-      
+
       let newActualSpeed = 0;
 
       let sign = 0;
@@ -315,39 +311,41 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       }
 
       newActualSpeed = actualSpeed + (acceleration * sign);
-      
+
       // If the sign is zero - the is no change to the actual speed.
       // But if the actual speed doesn't = zero, we need to shut it down
       if (sign === 0 && wheelConfig.actualSpeed !== newActualSpeed) {
         somethingChanged = true;
-        
+
         // Shut it down
         wheelConfig.direction = DIRECTION.STATIONARY;
         wheelConfig.actualSpeed = 0;
-        if (this.pca9685) await this.pca9685.shutdown(wheelConfig.pwmChannel);
-        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(0);
-        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(0);
+        if (this.pca9685) this.pca9685.channelOff(wheelConfig.pwmChannel);
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.write(0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.write(0);
       }
-      
+
       // If there need to be a change to the wheel speed
       else if (wheelConfig.actualSpeed !== newActualSpeed) {
         somethingChanged = true;
 
-        // Prevent the new actual speed from oscilating around zero
+        // Prevent the new actual speed from oscillating around zero
         if (targetSpeed === 0 && (newActualSpeed < acceleration) && (newActualSpeed > -acceleration)) {
           newActualSpeed = 0;
         }
 
         // Prevent the new actual speed from exceeding the constraints
         newActualSpeed = constrain(newActualSpeed, -100, 100);
-        
+
         wheelConfig.actualSpeed = newActualSpeed;
-        console.log(`targetSpeed: ${wheelConfig.targetSpeed}, actualSpeed: ${wheelConfig.actualSpeed}, PWM: ${map(Math.abs(wheelConfig.actualSpeed), 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM)}`);
-        if (this.pca9685) await this.pca9685.set_pwm(wheelConfig.pwmChannel, 0, map(Math.abs(wheelConfig.actualSpeed), 0, 100, env.MOTOR_MIN_PWM, env.MOTOR_MAX_PWM));
+        if (this.pca9685) {
+          this.pca9685.setDutyCycle(wheelConfig.pwmChannel, Math.abs(wheelConfig.actualSpeed) / 100);
+        }
+
         // Determine the direction pins from the current actual PWM to write
         wheelConfig.direction = (wheelConfig.actualSpeed === 0) ? DIRECTION.STATIONARY : ((wheelConfig.actualSpeed > 0) ? DIRECTION.FORWARD : DIRECTION.REVERSE);
-        if (wheelConfig.gpioForward) wheelConfig.gpioForward.digitalWrite(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
-        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.digitalWrite(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
+        if (wheelConfig.gpioForward) wheelConfig.gpioForward.write(wheelConfig.direction === DIRECTION.FORWARD ? 1 : 0);
+        if (wheelConfig.gpioReverse) wheelConfig.gpioReverse.write(wheelConfig.direction === DIRECTION.REVERSE ? 1 : 0);
       }
     });
 

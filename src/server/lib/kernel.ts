@@ -1,5 +1,5 @@
 import { Express } from 'express';
-import socketIo from 'socket.io';
+import { Server as SocketIOServer } from 'socket.io';
 import http from 'http';
 import { KernelEventMap, KERNEL_EVENT } from '../const/kernel-event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
@@ -17,6 +17,7 @@ import { I2cDriver } from './i2c-driver';
 import { SpeakerDriver } from './speaker-driver';
 import { PowerMonitor } from './power-monitor';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
+import { GPIODriver } from './gpio-driver';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -26,6 +27,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly httpServer: http.Server;
 
   public readonly i2cDriver: I2cDriver;
+
+  public readonly gpioDriver: GPIODriver;
 
   public readonly ledStripDriver: LEDStripDriver;
 
@@ -50,6 +53,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.expressApp = expressApp;
     this.httpServer = httpServer;
     this.i2cDriver = new I2cDriver();
+    this.gpioDriver = new GPIODriver();
     this.inputManager = new InputManager();
     this.ledStripDriver = new LEDStripDriver();
     this.motorDriver = new MotorDriver();
@@ -79,7 +83,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.log.info('Kernel initialising...');
 
     try {
-      await socketServer.initialise(socketIo(this.httpServer, { pingInterval: env.PING_INTERVAL }));
+      await socketServer.initialise(new SocketIOServer(this.httpServer, { pingInterval: env.PING_INTERVAL }));
     } catch (error) {
       this.log.error(error);
       // eslint-disable-next-line no-process-exit
@@ -95,13 +99,22 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       process.exit(1);
     }
 
+    // spin up the gpio driver
+    try {
+      await this.gpioDriver.initialise();
+    } catch (error) {
+      this.log.error(error);
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
+    }
+
     // spin up all of the other drivers
     Promise.all([
       this.speakerDriver.initialise(),
       this.powerMonitor.initialise(),
       this.inputManager.initialise(),
       this.ledStripDriver.initialise(),
-      this.motorDriver.initialise(this.i2cDriver.i2cBus),
+      this.motorDriver.initialise(this.i2cDriver.i2cBus, this.gpioDriver.pigpio),
     ]).then(() => {
       this.bindEvents();
 
@@ -165,6 +178,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
         await this.i2cDriver.shutDown();
       } catch (error) {
         this.log.error(`Error while shutting down the i2c Driver: ${error}`);
+      }
+
+      try {
+        await this.gpioDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the GPIO Driver: ${error}`);
       }
     }
   }

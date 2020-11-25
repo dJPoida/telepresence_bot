@@ -3,9 +3,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const webpack = require('webpack');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const dotenv = require('dotenv');
 const packageJson = require('./package.json');
 
@@ -33,8 +31,6 @@ module.exports = {
       __CLIENT_KEY__: JSON.stringify(process.env.CLIENT_KEY), // TODO: remove and implement proper auth
     }),
 
-    new CleanWebpackPlugin(),
-
     // Copy other static assets to our dist folder
     new CopyWebpackPlugin({
       patterns: [
@@ -44,11 +40,6 @@ module.exports = {
           toType: 'dir',
         },
       ],
-    }),
-
-    // Extract the compiled CSS for each entry point into an external file
-    new MiniCssExtractPlugin({
-      filename: 'css/[name].css',
     }),
   ],
 

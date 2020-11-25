@@ -1,3 +1,4 @@
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { env } from 'process';
 import { TypedEventEmitter } from '../../shared/helpers/typed-event-emitter.helper';
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
@@ -18,7 +19,7 @@ let socketServerInstance: null | SocketServer = null;
 class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   protected readonly log = classLoggerFactory(this);
 
-  private _io: SocketIO.Server | null = null;
+  private _io: SocketIOServer | null = null;
 
   private _initialised = false;
 
@@ -27,7 +28,7 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   /**
    * The SocketIO Server
    */
-  get io(): SocketIO.Server { if (!this._io) throw ReferenceError('Attempt to access SocketServer.io prior to assignment!'); return this._io; }
+  get io(): SocketIOServer { if (!this._io) throw ReferenceError('Attempt to access SocketServer.io prior to assignment!'); return this._io; }
 
   get initialised(): boolean { return this._initialised; }
 
@@ -160,7 +161,7 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
   /**
    * Initialise the Server Socket Handler
    */
-  async initialise(io: SocketIO.Server) {
+  async initialise(io: SocketIOServer) {
     this.log.info('Socket Server initialising...');
 
     // Attach the Socket Server

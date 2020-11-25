@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import express from 'express';
-import { resolve, join } from 'path';
+import { resolve } from 'path';
 import { wait } from '../../shared/helpers/wait.helper';
 import { env } from '../env';
 import { ContextLogger } from '../helpers/context-logger.helper';
@@ -8,7 +8,6 @@ import { ContextLogger } from '../helpers/context-logger.helper';
 /**
 * @description
 * Initialise webpack to compile and serve the client in development mode
-*
 * @note: the `require()` statements are intentionally localised to prevent import in production builds
 */
 export function applyWebpackDevelopmentMiddleware(
@@ -26,20 +25,13 @@ export function applyWebpackDevelopmentMiddleware(
   // eslint-disable-next-line import/no-extraneous-dependencies, import/no-dynamic-require, node/no-unpublished-require, global-require, @typescript-eslint/no-var-requires
   const webpackConfig = require(resolve(__dirname, env.SOURCE_PATH, '../webpack.config.dev'));
 
-  const compiler = webpack(webpackConfig);
+  const compiler = webpack({
+    ...webpackConfig,
+    stats: 'errors-only',
+  });
 
   // Attach the WebpackDevMiddleware to the express server
-  expressApp.use(webpackDevMiddleware(compiler, {
-    contentBase: [
-      resolve(__dirname, env.DIST_PATH, 'client/public'),
-    ],
-    host: process.env.HOST,
-    port: process.env.DEV_CLIENT_PORT,
-    watchContentBase: true,
-    methods: [],
-    logLevel: 'warn',
-    clientLogLevel: 'silent',
-  }));
+  expressApp.use(webpackDevMiddleware(compiler));
 
   // Assume the first time that the server is run that the webpack bundle is not available
   expressApp.developmentEnvironmentCompiling = true;
