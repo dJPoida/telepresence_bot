@@ -45,21 +45,6 @@ export const ControllerInterface: React.FC = () => {
         </div>
         <div className="controls right">
 
-          {/* Speed Slider */}
-          <div className="slider-wrapper">
-            <Slider
-              disabled={!connected}
-              orientation={ORIENTATION.PORTRAIT}
-              value={telemetry.speedInput}
-              onUpdate={telemetry.setSpeedInput}
-              invert
-              keyBindings={{
-                up: '+',
-                down: '-',
-              }}
-            />
-          </div>
-
           {/* Direction Joystick */}
           <div className="joystick-wrapper">
             <Joystick

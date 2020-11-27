@@ -21,12 +21,10 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
 
   private _initialised = false;
 
-  private _speed = env.DEFAULT_SPEED;
   private _drive: XYCoordinate = { x: 0, y: 0 };
   private _panTilt: XYCoordinate = { x: 0, y: 0 };
 
   get initialised(): boolean { return this._initialised; }
-  get speed(): number { return this._speed; }
   get drive(): XYCoordinate { return this._drive; }
   get panTilt(): XYCoordinate { return this._panTilt; }
 
@@ -94,9 +92,6 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
    */
   private handleClientCommand({ command }: SocketServerEventMap[SOCKET_SERVER_EVENT['CLIENT_COMMAND']]) {
     switch (command.type) {
-      case CLIENT_COMMAND.SET_SPEED:
-        this.handleSetSpeed(command.payload.speed);
-        break;
       case CLIENT_COMMAND.SET_DRIVE_INPUT:
         this.handleSetDrive(command.payload.drive);
         break;
@@ -106,20 +101,6 @@ export class InputManager extends TypedEventEmitter<InputManagerEventMap> {
       default:
         // NOOP - likely an incoming command the input manager isn't supposed to respond to
         break;
-    }
-  }
-
-  /**
-   * Fired when a request to set the speed input is received
-   */
-  private handleSetSpeed(value: number): void {
-    // Clean up the input value
-    const cleanedValue = round(constrain(value, 0, 100), 2);
-
-    // Implement the change if there is need to do it
-    if (this.speed !== cleanedValue) {
-      this._speed = cleanedValue;
-      this.emit(INPUT_MANAGER_EVENT.SPEED_INPUT_CHANGE, { speed: this.speed });
     }
   }
 

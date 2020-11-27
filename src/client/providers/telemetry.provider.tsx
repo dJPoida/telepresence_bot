@@ -10,11 +10,9 @@ type TelemetryContext = {
   power: Power,
   driveInput: XYCoordinate,
   panTiltInput: XYCoordinate,
-  speedInput: number,
 
   setDriveInput: (value: XYCoordinate) => unknown,
   setPanTiltInput: (value: XYCoordinate) => unknown,
-  setSpeedInput: (value: number) => unknown,
 };
 
 export const TelemetryContext = createContext<TelemetryContext>(null as never);
@@ -28,7 +26,6 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
   const [power, setPower] = useState<TelemetryContext['power']>({ current: null, voltage: null });
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
-  const [speedInput, setSpeedInput] = useState<TelemetryContext['speedInput']>(100);
 
   const { connected, ws, sendCommand } = useContext(SocketContext);
 
@@ -39,8 +36,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
     setInitialised(false);
     setDriveInput({ x: 0, y: 0 });
     setPanTiltInput({ x: 0, y: 0 });
-    setSpeedInput(0);
-  }, [setDriveInput, setPanTiltInput, setSpeedInput]);
+  }, [setDriveInput, setPanTiltInput]);
 
   /**
    * When the socket is connected to the server, setup the heartbeat to let the server
@@ -54,7 +50,6 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       setPower(botStatus.power);
       setDriveInput(botStatus.drive);
       setPanTiltInput(botStatus.panTilt);
-      setSpeedInput(botStatus.speed);
     };
 
     // Respond to a drive input status update
@@ -65,11 +60,6 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
     // Respond to a Pan/Tilt input status update
     const handlePanTiltInputStatusUpdate = ({ panTilt: newPanTilt }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]) => {
       setPanTiltInput(newPanTilt);
-    };
-
-    // Respond to a speed input status update
-    const handleSpeedInputStatusUpdate = ({ speed: newSpeed }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]) => {
-      setSpeedInput(newSpeed);
     };
 
     // Respond to a power status update
@@ -87,7 +77,6 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .on(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
     }
 
@@ -96,20 +85,9 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.off(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .off(SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS, handleSpeedInputStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
     };
   }, [ws, connected, resetInputs]);
-
-  /**
-   * Wrapper around setSpeed to invoke a message to the server
-   */
-  const doSetSpeed = useCallback((speed: number) => {
-    if (speedInput !== speed) {
-      sendCommand({ type: CLIENT_COMMAND.SET_SPEED, payload: { speed } });
-      setSpeedInput(speed);
-    }
-  }, [setSpeedInput, sendCommand, speedInput]);
 
   /**
    * Wrapper around setDriveInput to invoke a message to the server
@@ -137,10 +115,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       power,
       driveInput,
       panTiltInput,
-      speedInput,
       setDriveInput: doSetDriveInput,
       setPanTiltInput: doSetPanTiltInput,
-      setSpeedInput: doSetSpeed,
     }}
     >
       {children}

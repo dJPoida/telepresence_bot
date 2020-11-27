@@ -37,7 +37,6 @@ export const env = {
   SOURCE_PATH: resolve(__dirname, '../../src'),
   DIST_PATH: resolve(__dirname, '../../dist'),
   CLIENT_KEY: envString('CLIENT_KEY'),
-  DEFAULT_SPEED: envNum('DEFAULT_SPEED'),
   PING_INTERVAL: envNum('PING_INTERVAL'),
 
   I2C_BUS_NO: envNum('I2C_BUS_NO'),

@@ -15,7 +15,6 @@ export const SOCKET_SERVER_MESSAGE = {
   BOT_STATUS: 'stat',
   DRIVE_INPUT_STATUS: 'dis',
   PAN_TILT_INPUT_STATUS: 'ptis',
-  SPEED_INPUT_STATUS: 'sis',
   POWER_STATUS: 'ps',
 
   // Events
@@ -39,7 +38,6 @@ export interface SocketServerMessageMap {
   [SOCKET_SERVER_MESSAGE.BOT_STATUS]: BotStatusDto;
   [SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS]: Pick<BotStatusDto, 'drive'>;
   [SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS]: Pick<BotStatusDto, 'panTilt'>;
-  [SOCKET_SERVER_MESSAGE.SPEED_INPUT_STATUS]: Pick<BotStatusDto, 'speed'>;
   [SOCKET_SERVER_MESSAGE.POWER_STATUS]: Pick<BotStatusDto, 'power'>;
 
   [SOCKET_SERVER_MESSAGE.EVENT_SHUT_DOWN]: { reason: string };

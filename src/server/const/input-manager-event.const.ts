@@ -15,9 +15,6 @@ export const INPUT_MANAGER_EVENT = {
 
   // Fires when the Pan / Tilt input is changed
   PAN_TILT_INPUT_CHANGE: 'pan_tilt_input_change',
-
-  // Fires when the Speed input is changed
-  SPEED_INPUT_CHANGE: 'speed_input_change',
 } as const;
 export type INPUT_MANAGER_EVENT = typeof INPUT_MANAGER_EVENT;
 export type A_INPUT_MANAGER_EVENT = INPUT_MANAGER_EVENT[keyof INPUT_MANAGER_EVENT];
@@ -30,9 +27,7 @@ export interface InputManagerEventMap {
   [INPUT_MANAGER_EVENT.CHANGE]: {
     drive: XYCoordinate,
     panTilt: XYCoordinate,
-    speed: number,
   };
   [INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE]: { drive: XYCoordinate };
   [INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE]: { panTilt: XYCoordinate };
-  [INPUT_MANAGER_EVENT.SPEED_INPUT_CHANGE]: { speed: number };
 }

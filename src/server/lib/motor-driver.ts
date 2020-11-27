@@ -28,7 +28,6 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   protected readonly log = classLoggerFactory(this);
   private _initialised = false;
   private driveInput: XYCoordinate = { x: 0, y: 0 };
-  private speed = 1;
   private i2cBus: null | PromisifiedBus = null;
   private pigpio: null | Pigpio = null;
   private pca9685: null | Pca9685Driver = null;
@@ -216,14 +215,6 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
   }
 
   /**
-   * Fired by the Kernel when the input manager receives a set speed event
-   */
-  public setSpeed(speed: number): void {
-    this.speed = constrain(speed, 0, 100);
-    this.calculateTargets();
-  }
-
-  /**
    * Fired by the Kernel for any reason that would require the motors to stop
    */
   public stop(): void {
@@ -270,8 +261,8 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
     const v = (100 - Math.abs(x)) * (y / 100) + y;
     const w = (100 - Math.abs(y)) * (x / 100) + x;
 
-    const targetLeftSpeed = (((v - w) / 2) * (this.speed / 100));
-    const targetRightSpeed = (((v + w) / 2) * (this.speed / 100));
+    const targetLeftSpeed = ((v - w) / 2);
+    const targetRightSpeed = ((v + w) / 2);
 
     this.wheels[WHEEL.FRONT_LEFT].targetSpeed = targetLeftSpeed;
     this.wheels[WHEEL.FRONT_RIGHT].targetSpeed = targetRightSpeed;

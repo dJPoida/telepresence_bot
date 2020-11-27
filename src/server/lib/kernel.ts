@@ -71,7 +71,6 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     return {
       drive: this.inputManager.drive,
       panTilt: this.inputManager.panTilt,
-      speed: this.inputManager.speed,
       power: this.powerMonitor.power,
     };
   }
@@ -239,7 +238,6 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.inputManager
       .on(INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE, (payload) => setImmediate(() => this.handleDriveInputChanged(payload)))
       .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)))
-      .on(INPUT_MANAGER_EVENT.SPEED_INPUT_CHANGE, (payload) => setImmediate(() => this.handleSpeedInputChanged(payload)));
 
     // Listen for Power Monitor Events
     this.powerMonitor
@@ -298,14 +296,6 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handlePanTiltInputChanged({ panTilt }: InputManagerEventMap[INPUT_MANAGER_EVENT['PAN_TILT_INPUT_CHANGE']]) {
     socketServer.sendPanTiltInputStatusToClients({ panTilt });
-  }
-
-  /**
-   * Fired when the input manager updates the speed input
-   */
-  private handleSpeedInputChanged({ speed }: InputManagerEventMap[INPUT_MANAGER_EVENT['SPEED_INPUT_CHANGE']]) {
-    socketServer.sendSpeedInputStatusToClients({ speed });
-    this.motorDriver.setSpeed(speed);
   }
 
   /**
