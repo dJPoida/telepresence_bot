@@ -1,0 +1,1 @@
+sudo forever-service delete tpbot

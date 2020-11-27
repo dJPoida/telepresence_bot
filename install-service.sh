@@ -1,1 +1,0 @@
-sudo forever-service install tpbot --script /home/pi/telepresence_bot/dist/server/main.js --envVars "NODE_ENV=PRODUCTION" --foreverOptions " --workingDir /home/pi/telepresence_bot/dist/server" -r pi

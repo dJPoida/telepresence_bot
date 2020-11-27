@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 import { resolve } from 'path';
 
-dotenv.config();
+dotenv.config({
+  path: resolve(__dirname, '../../.env'),
+});
 
 function envBool(name: string) {
   const input = process.env[name];
