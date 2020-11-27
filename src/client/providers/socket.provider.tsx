@@ -130,6 +130,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
      * Used to measure the latency
      */
     function handlePong(ms: number) {
+      console.log('pahpoooong!');
       setLatency(ms);
     }
 
@@ -149,6 +150,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
       ws.off('connect', handleConnection);
       ws.off('disconnect', handleDisconnection);
       ws.off('connect_timeout', handleConnectTimeout);
+      ws.off('pong', handlePong);
       ws.off(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
       ws.off(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
       ws.off(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);

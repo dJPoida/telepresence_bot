@@ -23,7 +23,7 @@ export const TelemetryContext = createContext<TelemetryContext>(null as never);
  */
 export const TelemetryProvider: React.FC = function TelemetryProvider({ children }) {
   const [initialised, setInitialised] = useState(false);
-  const [power, setPower] = useState<TelemetryContext['power']>({ current: null, voltage: null });
+  const [power, setPower] = useState<TelemetryContext['power']>({ current: null, voltage: null, battery: null });
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
 

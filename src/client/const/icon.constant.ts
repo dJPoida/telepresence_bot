@@ -52,6 +52,12 @@ export const ICON = {
   360: '360',
   CHEVRON_UP: 'chevron-up',
   CHEVRON_DOWN: 'chevron-down',
+  BATTERY_0: 'battery-0',
+  BATTERY_1: 'battery-1',
+  BATTERY_2: 'battery-2',
+  BATTERY_3: 'battery-3',
+  BATTERY_4: 'battery-4',
+  BATTERY_5: 'battery-5',
 } as const;
 export type ICON = typeof ICON;
 export type AN_ICON = ICON[keyof ICON];
