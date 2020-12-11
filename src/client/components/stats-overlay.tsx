@@ -24,8 +24,6 @@ export const StatsOverlay: React.FC<StatsOverlayProps> = () => {
       <span className="value">{`${telemetry.power.current ?? '--'} mA`}</span>
 
       <span className="section-header">Inputs:</span>
-      <span className="key">Speed:</span>
-      <span className="value">{`${telemetry.speedInput}%`}</span>
       <span className="key">Drive:</span>
       <span className="value">{`${telemetry.driveInput.x}% / ${telemetry.driveInput.y}%`}</span>
       <span className="key">Pan:</span>

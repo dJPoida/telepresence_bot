@@ -60,10 +60,6 @@ declare global {
       once(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]>): any;
 
-      on(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
-      once(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
-      addEventListener(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]>): any;
-
       on(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]>): any;
       once(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]>): any;
@@ -94,7 +90,6 @@ declare global {
       emit(event: SOCKET_SERVER_MESSAGE['BOT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['BOT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]): any;
-      emit(event: SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['SPEED_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]): any;
 

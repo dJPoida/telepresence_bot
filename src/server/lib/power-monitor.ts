@@ -6,6 +6,9 @@ import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monito
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { round } from '../../shared/helpers/round.helper';
 
+const minBatteryVoltage = 10.5;
+const maxBatteryVoltage = 12.3;
+
 export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
   protected readonly log = classLoggerFactory(this);
   private readonly ina219: Ina219;
@@ -48,13 +51,27 @@ export class PowerMonitor extends TypedEventEmitter<PowerMonitorEventMap> {
     return this.hardwareAvailable ? this._averageCurrent : null;
   }
 
+  /**
+   * Read the voltage of the battery
+   */
   get voltage(): null | number {
     return this.hardwareAvailable ? this._averageVoltage : null;
   }
 
+  /**
+   * Convert the voltage of the battery into a battery 0.00% -> 100.00%
+   */
+  get battery(): null | number {
+    return this.voltage ? Math.max(0, Math.min(100, round(((this.voltage - minBatteryVoltage) / (maxBatteryVoltage - minBatteryVoltage)) * 100, 2))) : 0;
+  }
+
+  /**
+   * The complex object which includes the current consumption, battery voltage and battery level
+   */
   get power(): Power { return {
     current: this.current,
     voltage: this.voltage,
+    battery: this.battery,
   }; }
 
   /**

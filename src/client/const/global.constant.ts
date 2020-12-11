@@ -1,14 +1,6 @@
 declare const __VERSION__: string;
 declare const __CLIENT_KEY__: string;
 
-console.log('');
-console.log('');
-console.log('================================');
-console.log(__CLIENT_KEY__);
-console.log('================================');
-console.log('');
-console.log('');
-
 export const global = {
   VERSION: __VERSION__,
 
