@@ -1,0 +1,75 @@
+.tv-static {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: black;
+
+  #noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      pointer-events: none;
+  }
+
+  #noise:before {
+      content: '';
+      position: absolute;
+      top: -400vh;
+      left: -400vw;
+      height: 800vh;
+      width: 800vw;
+      background: url('/img/static.jpg');
+      pointer-events: none;
+      display: block;
+      opacity: 1;
+      -webkit-animation: grain 1s steps(30) infinite;
+      animation: grain 1s steps(30) infinite;
+      will-change: transform;
+      transition: translate step-end;
+  }
+
+
+@-webkit-keyframes grain{
+  0%,to{
+    -webkit-transform:translate(25%, 25%);
+    transform:translate(25%, 25%);
+  }
+  3%{-webkit-transform:translate(-25%,-25%);transform:translate(-25%,-25%);}
+  6%{-webkit-transform:translate(32%,32%);transform:translate(32%,32%);}
+  9%{-webkit-transform:translate(-17%,-17%);transform:translate(-17%,-17%);}
+  12%{-webkit-transform:translate(21%,21%);transform:translate(21%,21%);}
+  15%{-webkit-transform:translate(-20%,-20%);transform:translate(-20%,-20%);}
+  18%{-webkit-transform:translate(5%,5%);transform:translate(5%,5%);}
+  21%{-webkit-transform:translate(-30%,-30%);transform:translate(-30%,-30%);}
+  24%{-webkit-transform:translate(27%,27%);transform:translate(27%,27%);}
+  27%{-webkit-transform:translate(-6%,-6%);transform:translate(-6%,-6%);}
+  30%{-webkit-transform:translate(12%,12%);transform:translate(12%,12%);}
+  33%{-webkit-transform:translate(-8%,-8%);transform:translate(-8%,-8%);}
+  36%{-webkit-transform:translate(17%,17%);transform:translate(17%,17%);}
+  39%{-webkit-transform:translate(-22%,-22%);transform:translate(-22%,-22%);}
+  42%{-webkit-transform:translate(14%,14%);transform:translate(14%,14%);}
+  45%{-webkit-transform:translate(-9%,-9%);transform:translate(-9%,-9%);}
+  48%{-webkit-transform:translate(6%,6%);transform:translate(6%,6%);}
+  51%{-webkit-transform:translate(-14%,-14%);transform:translate(-14%,-14%);}
+  54%{-webkit-transform:translate(31%,31%);transform:translate(31%,31%);}
+  57%{-webkit-transform:translate(-3%,-3%);transform:translate(-3%,-3%);}
+  60%{-webkit-transform:translate(29%,29%);transform:translate(29%,29%);}
+  63%{-webkit-transform:translate(-30%,-30%);transform:translate(-30%,-30%);}
+  66%{-webkit-transform:translate(21%,21%);transform:translate(21%,21%);}
+  69%{-webkit-transform:translate(-22%,-22%);transform:translate(-22%,-22%);}
+  72%{-webkit-transform:translate(1%,1%);transform:translate(1%,1%);}
+  75%{-webkit-transform:translate(-17%,-17%);transform:translate(-17%,-17%);}
+  78%{-webkit-transform:translate(4%,4%);transform:translate(4%,4%);}
+  81%{-webkit-transform:translate(-12%,-12%);transform:translate(-12%,-12%);}
+  84%{-webkit-transform:translate(8%,8%);transform:translate(8%,8%);}
+  87%{-webkit-transform:translate(-28%,-28%);transform:translate(-28%,-28%);}
+  90%{-webkit-transform:translate(35%,35%);transform:translate(35%,35%);}
+  93%{-webkit-transform:translate(-26%,-26%);transform:translate(-26%,-26%);}
+  96%{-webkit-transform:translate(23%,23%);transform:translate(23%,23%);}
+  100%{-webkit-transform:translate(-1%,-1%);transform:translate(-1%,-1%);}
+}}

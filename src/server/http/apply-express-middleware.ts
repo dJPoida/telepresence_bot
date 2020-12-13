@@ -25,8 +25,8 @@ export function applyExpressMiddleware(
   });
 
   // Serve the client index
-  expressApp.get('/', (req, res) => {
-    sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/index.html'));
+  expressApp.get(['/', '/control'], (req, res) => {
+    sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/control.html'));
   });
 
   // Serve the client display

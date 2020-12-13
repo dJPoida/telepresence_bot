@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title><%= appTitle %></title>
+  
+  <!-- Add to home screen for Android and iOS -->
+  <link rel="manifest" href="/config-manifest.json?ver=<%= appVersionSuffix %>">
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/icons/app_icon_180px.png?ver=<%= appVersionSuffix %>">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/icons/app_icon_16px.png?ver=<%= appVersionSuffix %>">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/icons/app_icon_32px.png?ver=<%= appVersionSuffix %>">
+  <link rel="icon" type="image/png" sizes="96x96" href="/img/icons/app_icon_96px.png?ver=<%= appVersionSuffix %>">
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/icons/app_icon_192px.png?ver=<%= appVersionSuffix %>">
+  <link rel="shortcut icon" type="image/x-icon" href="/img/icons/favicon.ico">
+  <meta name="msapplication-TileColor" content="#FF6D00">
+  <meta name="msapplication-TileImage" content="/img/icons/app_icon_144px.png?ver=<%= appVersionSuffix %>">
+  <meta name="theme-color" content="#FF6D00">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="<%= appTitle %>">
+  
+  <!-- Web Font -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app_root"></div>
+  <div id="portal_root"></div>
+
+  <!-- Dependencies -->
+  <script src="./js/react.<%= jsSuffix %>.js?ver=<%= appVersionSuffix %>"></script>
+  <script src="./js/react-dom.<%= jsSuffix %>.js?ver=<%= appVersionSuffix %>"></script>    
+  <script src="./js/peerjs.<%= jsSuffix %>.js?ver=<%= appVersionSuffix %>"></script>    
+</body>
+</html>

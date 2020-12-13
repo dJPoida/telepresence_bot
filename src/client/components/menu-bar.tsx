@@ -15,7 +15,7 @@ export type MenuBarProps = {
 export const MenuBar: React.FC<MenuBarProps> = () => {
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
   const { connected, latency } = useContext(SocketContext);
-  const {power: {battery}} = useContext(TelemetryContext);
+  const { power: { battery } } = useContext(TelemetryContext);
   const displayBattery = battery ? `${battery}%` : '??%';
   const iconValue = battery ? Math.round(battery / 20) : 0;
 

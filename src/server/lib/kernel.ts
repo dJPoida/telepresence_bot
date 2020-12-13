@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import http from 'http';
+import https, { ServerOptions } from 'https';
 import { KernelEventMap, KERNEL_EVENT } from '../const/kernel-event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
 import { env } from '../env';
@@ -18,9 +19,12 @@ import { SpeakerDriver } from './speaker-driver';
 import { PowerMonitor } from './power-monitor';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
 import { GPIODriver } from './gpio-driver';
+import { VideoManager } from './video-manager';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
+
+  public readonly credentials: ServerOptions;
 
   public readonly expressApp: Express;
 
@@ -40,6 +44,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
   public readonly powerMonitor: PowerMonitor
 
+  public readonly videoManager: VideoManager;
+
   private _initialised = false;
 
   private _shuttingDown = false;
@@ -47,9 +53,10 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   /**
   * @constructor
   */
-  constructor(expressApp: Express, httpServer: http.Server) {
+  constructor(expressApp: Express, httpServer: https.Server, credentials: ServerOptions) {
     super();
 
+    this.credentials = credentials;
     this.expressApp = expressApp;
     this.httpServer = httpServer;
     this.i2cDriver = new I2cDriver();
@@ -59,6 +66,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.motorDriver = new MotorDriver();
     this.speakerDriver = new SpeakerDriver();
     this.powerMonitor = new PowerMonitor();
+    this.videoManager = new VideoManager();
 
     this.initialise();
   }
@@ -109,6 +117,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     // spin up all of the other drivers
     Promise.all([
+      this.videoManager.initialise(this.credentials),
       this.speakerDriver.initialise(),
       this.powerMonitor.initialise(),
       this.inputManager.initialise(),
@@ -141,6 +150,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
         await socketServer.shutDown();
       } catch (error) {
         this.log.error(`Error while shutting down the Socket Server: ${error}`);
+      }
+
+      try {
+        await this.videoManager.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the Video Manager: ${error}`);
       }
 
       try {
@@ -197,7 +212,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     applyExpressMiddleware(this.expressApp);
 
     // Server running
-    this.httpServer.listen(env.DEFAULT_PORT, () => this.log.info(`Http server running on port ${env.DEFAULT_PORT}`));
+    this.httpServer.listen(env.HTTPS_PORT, () => this.log.info(`Http server running on port ${env.HTTPS_PORT}`));
   }
 
   /**
@@ -237,7 +252,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       .on(SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED, this.handleClientDisconnected.bind(this));
     this.inputManager
       .on(INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE, (payload) => setImmediate(() => this.handleDriveInputChanged(payload)))
-      .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)))
+      .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)));
 
     // Listen for Power Monitor Events
     this.powerMonitor

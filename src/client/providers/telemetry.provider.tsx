@@ -73,7 +73,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
     } else {
       // Listen to incoming bot status messages
       // eslint-disable-next-line no-console
-      console.log('Connected to Server');
+      console.log('Connected to Telemetry Socket');
       ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)

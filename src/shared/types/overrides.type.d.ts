@@ -33,6 +33,7 @@ declare global {
 
       // CLIENT -> SERVER
       emit(event: SOCKET_CLIENT_MESSAGE['AUTH'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]): any;
+      emit(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]): any;
       emit(event: SOCKET_CLIENT_MESSAGE['COMMAND'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]): any;
 
       // SERVER -> CLIENT
@@ -101,6 +102,10 @@ declare global {
       on(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
       once(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
       addEventListener(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
+
+      on(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
+      once(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
+      addEventListener(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
     }
   }
 }

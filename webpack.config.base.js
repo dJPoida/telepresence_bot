@@ -29,6 +29,7 @@ module.exports = {
       __VERSION__: JSON.stringify(packageJson.version),
       // __CLIENT_KEY__: JSON.stringify(env.CLIENT_KEY), // TODO: remove and implement proper auth
       __CLIENT_KEY__: JSON.stringify(process.env.CLIENT_KEY), // TODO: remove and implement proper auth
+      __WEB_RTC_PORT__: JSON.stringify(process.env.WEB_RTC_PORT),
     }),
 
     // Copy other static assets to our dist folder
@@ -50,5 +51,6 @@ module.exports = {
   externals: {
     react: 'React',
     'react-dom': 'ReactDOM',
+    peerjs: 'Peer',
   },
 };

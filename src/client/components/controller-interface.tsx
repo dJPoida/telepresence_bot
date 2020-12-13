@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import classNames from 'classnames';
-import { ORIENTATION } from '../const/orientation.constant';
+import Peer from 'peerjs';
 import { LocalSettingsContext } from '../providers/local-settings.provider';
 import { SocketContext } from '../providers/socket.provider';
 import { TelemetryContext } from '../providers/telemetry.provider';
 import { Joystick } from './joystick';
 import { MenuBar } from './menu-bar';
-import { Slider } from './slider';
 import { StatsOverlay } from './stats-overlay';
+import { VideoContainer } from './video-container';
 
 export const ControllerInterface: React.FC = () => {
   const { connected } = useContext(SocketContext);
@@ -15,7 +15,9 @@ export const ControllerInterface: React.FC = () => {
   const localSettings = useContext(LocalSettingsContext);
 
   return (
-    <div className={classNames('control-panel', { connected })}>
+    <div className={classNames('controller-interface', { connected })}>
+
+      <VideoContainer />
 
       <MenuBar />
 

@@ -99,6 +99,11 @@ module.exports = wpMerge.merge(baseConfig, {
           to: 'js',
           toType: 'dir',
         },
+        {
+          from: path.resolve(__dirname, 'node_modules/peerjs/dist', 'peerjs.js'),
+          to: 'js/peerjs.production.min.js',
+          toType: 'file',
+        },
       ],
     }),
   ],

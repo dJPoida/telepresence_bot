@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import socketIoClient from 'socket.io-client';
 import { ClientCommandPayload } from '../../shared/constants/client-command.const';
 import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
@@ -6,6 +6,8 @@ import { SOCKET_CLIENT_TYPE } from '../../shared/constants/socket-client-type.co
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { SocketHandshakeQuery } from '../../shared/types/socket-handshake-query.type';
 import { global } from '../const/global.constant';
+import { WEBRTC_STATE } from '../const/webrtc-state.constant';
+import { WebRTCContext } from './webrtc.provider';
 
 type SocketContext = {
   sendCommand: (payload: ClientCommandPayload) => unknown,
@@ -37,6 +39,8 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
   const [connected, setConnected] = useState<SocketContext['connected']>(false);
   const [latency, setLatency] = useState<SocketContext['latency']>(null);
 
+  const { webRTCState, peerId, clientType } = useContext(WebRTCContext);
+
   /**
    * Method to send a command to the server
    */
@@ -49,115 +53,118 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
   }, [connected]);
 
   /**
-   * Connect listeners on boot
+   * Connect listeners on connection to the webRTC peer
    */
   useEffect(() => {
-    /**
-     * Attempt to reconnect
-     */
-    function reconnect() {
-      setTimeout(() => {
-        if (!ws.connected) {
-          ws.connect();
+    if (webRTCState === WEBRTC_STATE.CONNECTED) {
+      /**
+       * Attempt to reconnect
+       */
+      const reconnect = () => {
+        setTimeout(() => {
+          if (!ws.connected) {
+            ws.connect();
+          }
+        }, 500);
+      };
+
+      /**
+       * Respond to a successful Authorization
+       */
+      const handleAuthorized = () => {
+        setConnected(true);
+      };
+
+      /**
+       * Respond to a Failed Authorization
+       */
+      const handleUnauthorized = (reason: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]) => {
+        console.error(`Unauthorized: ${reason}`);
+
+        // If the authorisation fails - reload the page. This should trigger a login page load
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      };
+
+      /**
+       * Respond to a challenge for authorization
+       */
+      const handleChallenge = () => {
+        // TODO: Implement proper auth
+        ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
+          key: global.CLIENT_KEY,
+        });
+      };
+
+      // bindings
+      const handleConnection = () => {
+        ws.emit(SOCKET_CLIENT_MESSAGE.SET_PEER_ID, { peerId, clientType });
+      };
+
+      /**
+       * Fired when the socket is disconnected for some reason
+       */
+      const handleDisconnection = (reason: string) => {
+        console.warn(`Connection to the server has been lost: ${reason}`);
+        setConnected(false);
+        setLatency(null);
+
+        // if the server booted us - let's attempt to re-connect
+        if (reason === 'io server disconnect') {
+          reconnect();
         }
-      }, 500);
+      };
+
+      /**
+       * Fired when a connection attempt times out
+       */
+      const handleConnectTimeout = () => {
+        console.warn('Connection attempt timed out.');
+        setConnected(false);
+
+        // If the socket cannot connect to the server - reload the page so that the browser updates (i.e. leaves the )
+        // TODO: sometime in the future improve this to be more graceful and use a state value to render a different interface
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      };
+
+      /**
+       * Fired when a PONG is received from Socket.IO
+       * Used to measure the latency
+       */
+      const handlePong = (ms: number) => {
+        setLatency(ms);
+      };
+
+      ws.on('connect', handleConnection);
+      ws.on('disconnect', handleDisconnection);
+      ws.on('connect_timeout', handleConnectTimeout);
+      ws.on('pong', handlePong);
+      ws.on(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
+      ws.on(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
+      ws.on(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
+
+      // begin connection
+      ws.connect();
+
+      // destroy listeners on un-mount
+      return () => {
+        ws.off('connect', handleConnection);
+        ws.off('disconnect', handleDisconnection);
+        ws.off('connect_timeout', handleConnectTimeout);
+        ws.off('pong', handlePong);
+        ws.off(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
+        ws.off(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
+        ws.off(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
+
+        ws.disconnect();
+      };
     }
 
-    /**
-     * Respond to a successful Authorization
-     */
-    function handleAuthorized() {
-      setConnected(true);
-    }
-
-    /**
-     * Respond to a Failed Authorization
-     */
-    function handleUnauthorized(reason: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['UNAUTHORIZED']]) {
-      console.error(`Unauthorized: ${reason}`);
-
-      // If the authorisation fails - reload the page. This should trigger a login page load
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-
-    /**
-     * Respond to a challenge for authorization
-     */
-    function handleChallenge() {
-      // TODO: Implement proper auth
-      ws.emit(SOCKET_CLIENT_MESSAGE.AUTH, {
-        key: global.CLIENT_KEY,
-      });
-    }
-
-    // bindings
-    function handleConnection() {
-      // NOOP
-    }
-
-    /**
-     * Fired when the socket is disconnected for some reason
-     */
-    function handleDisconnection(reason: string) {
-      console.warn(`Connection to the server has been lost: ${reason}`);
-      setConnected(false);
-      setLatency(null);
-
-      // if the server booted us - let's attempt to re-connect
-      if (reason === 'io server disconnect') {
-        reconnect();
-      }
-    }
-
-    /**
-     * Fired when a connection attempt times out
-     */
-    function handleConnectTimeout() {
-      console.warn('Connection attempt timed out.');
-      setConnected(false);
-
-      // If the socket cannot connect to the server - reload the page so that the browser updates (i.e. leaves the )
-      // TODO: sometime in the future improve this to be more graceful and use a state value to render a different interface
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-
-    /**
-     * Fired when a PONG is received from Socket.IO
-     * Used to measure the latency
-     */
-    function handlePong(ms: number) {
-      console.log('pahpoooong!');
-      setLatency(ms);
-    }
-
-    ws.on('connect', handleConnection);
-    ws.on('disconnect', handleDisconnection);
-    ws.on('connect_timeout', handleConnectTimeout);
-    ws.on('pong', handlePong);
-    ws.on(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
-    ws.on(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
-    ws.on(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
-
-    // begin connection
-    ws.connect();
-
-    // destroy listeners on un-mount
-    return () => {
-      ws.off('connect', handleConnection);
-      ws.off('disconnect', handleDisconnection);
-      ws.off('connect_timeout', handleConnectTimeout);
-      ws.off('pong', handlePong);
-      ws.off(SOCKET_SERVER_MESSAGE.CHALLENGE, handleChallenge);
-      ws.off(SOCKET_SERVER_MESSAGE.AUTHORIZED, handleAuthorized);
-      ws.off(SOCKET_SERVER_MESSAGE.UNAUTHORIZED, handleUnauthorized);
-
-      ws.disconnect();
-    };
-  }, []);
+    return undefined;
+  }, [webRTCState, peerId]);
 
   return (
     <SocketContext.Provider value={{ sendCommand, ws, connected, latency }}>
