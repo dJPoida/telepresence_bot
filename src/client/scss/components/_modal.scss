@@ -41,6 +41,10 @@
     .modal-body {
       padding: 1em 0;
       flex: 1;
+
+      p:first-of-type{
+        margin-top: 0;
+      }
     }
 
     .modal-footer {

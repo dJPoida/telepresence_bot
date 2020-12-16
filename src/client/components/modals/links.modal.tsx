@@ -5,6 +5,7 @@ import { Icon } from '../icon';
 import { Modal, ModalProps } from '../modal';
 
 import { ICON } from '../../const/icon.constant';
+import { Button } from '../button';
 
 export type LinksModalProps = ModalProps & {
 }
@@ -16,20 +17,34 @@ export const LinksModal: React.FC<LinksModalProps> = (props) => {
     <Modal
       {...props}
       className={classNames('links', className)}
-      headerComponent={<h1>Links</h1>}
+      headerComponent={(
+        <h1>
+          <Icon icon={ICON.EXTERNAL_LINK} />
+          <span>Links</span>
+        </h1>
+)}
     >
-      <a href="/">
+      <Button
+        className="primary"
+        onClick={() => { window.location.reload(); }}
+      >
         <Icon icon={ICON.REFRESH} />
         <span>Reload</span>
-      </a>
-      <a href="/display">
+      </Button>
+      <Button
+        className="primary"
+        onClick={() => { window.location.pathname = '/display'; }}
+      >
         <Icon icon={ICON.TELEPRESENCE_BOT} />
-        <span>Go to Display Page</span>
-      </a>
-      <a href="/config">
+        <span>Bot Display</span>
+      </Button>
+      <Button
+        className="primary"
+        onClick={() => { window.location.pathname = '/config'; }}
+      >
         <Icon icon={ICON.SETTINGS} />
-        <span>Go to Config Page</span>
-      </a>
+        <span>Device Config</span>
+      </Button>
     </Modal>
   );
 };

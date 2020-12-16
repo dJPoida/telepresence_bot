@@ -58,6 +58,9 @@ export const ICON = {
   BATTERY_3: 'battery-3',
   BATTERY_4: 'battery-4',
   BATTERY_5: 'battery-5',
+  EXTERNAL_LINK: 'external-link',
+  LOCK: 'lock',
+  DOWNLOAD: 'download',
 } as const;
 export type ICON = typeof ICON;
 export type AN_ICON = ICON[keyof ICON];

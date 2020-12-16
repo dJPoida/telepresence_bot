@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import { ServerOptions } from 'https';
-import pem, { CSRCreationOptions, CertificateCreationOptions } from 'pem';
 import publicIp from 'public-ip';
 import internalIp from 'internal-ip';
 
@@ -14,47 +13,47 @@ const csrPath = path.resolve(securityFilesPath, 'tpbot.csr');
 const serviceKeyPath = path.resolve(securityFilesPath, 'tpbot.client.pem');
 const certificatePath = path.resolve(securityFilesPath, 'tpbot.cert');
 
-/**
- * Promisified version of pem.createPrivateKey
- */
-const createPrivateKey = (): Promise<string> => new Promise((resolve, reject) => {
-  pem.createPrivateKey((error, result) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(result.key);
-    }
-  });
-});
+// /**
+//  * Promisified version of pem.createPrivateKey
+//  */
+// const createPrivateKey = (): Promise<string> => new Promise((resolve, reject) => {
+//   pem.createPrivateKey((error, result) => {
+//     if (error) {
+//       reject(error);
+//     } else {
+//       resolve(result.key);
+//     }
+//   });
+// });
 
-/**
- * Promisified version of pem.createCSR
- */
-const createCSR = (options: CSRCreationOptions): Promise<string> => new Promise((resolve, reject) => {
-  pem.createCSR(options, (error, result) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(result.csr);
-    }
-  });
-});
+// /**
+//  * Promisified version of pem.createCSR
+//  */
+// const createCSR = (options: CSRCreationOptions): Promise<string> => new Promise((resolve, reject) => {
+//   pem.createCSR(options, (error, result) => {
+//     if (error) {
+//       reject(error);
+//     } else {
+//       resolve(result.csr);
+//     }
+//   });
+// });
 
-/**
- * Promisified version of pem.createCertificate
- */
-const createCertificate = (options: CertificateCreationOptions): Promise<{
-  serviceKey: string,
-  certificate: string,
-}> => new Promise((resolve, reject) => {
-  pem.createCertificate(options, (error, result) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve({ serviceKey: result.serviceKey, certificate: result.certificate });
-    }
-  });
-});
+// /**
+//  * Promisified version of pem.createCertificate
+//  */
+// const createCertificate = (options: CertificateCreationOptions): Promise<{
+//   serviceKey: string,
+//   certificate: string,
+// }> => new Promise((resolve, reject) => {
+//   pem.createCertificate(options, (error, result) => {
+//     if (error) {
+//       reject(error);
+//     } else {
+//       resolve({ serviceKey: result.serviceKey, certificate: result.certificate });
+//     }
+//   });
+// });
 
 /**
  * Responsible for creating the certificates required to deliver an SSL peer to peer connection
@@ -68,13 +67,13 @@ export class SecurityManager {
 
   private _publicIp: null | string = null;
 
-  private _privateKey: null | string = null;
+  // private _privateKey: null | string = null;
 
-  private _csr: null | string = null;
+  // private _csr: null | string = null;
 
-  private _serviceKey: null | string = null;
+  // private _serviceKey: null | string = null;
 
-  private _certificate: null | string = null;
+  // private _certificate: null | string = null;
 
   /**
    * Create the directory where the security files will be stored
@@ -165,71 +164,71 @@ export class SecurityManager {
   /**
    * Create and save a new private key
    */
-  private createAndSavePrivateKey = async (): Promise<boolean> => {
-    try {
-      this._privateKey = (await createPrivateKey()) ?? null;
-      if (this.privateKey) {
-        fs.writeFileSync(privateKeyPath, this.privateKey);
-        return true;
-      }
-      throw new Error('Private Key Empty!');
-    } catch (err) {
-      this.log.error('Failed to create the private key.', err);
-      return false;
-    }
-  }
+  // private createAndSavePrivateKey = async (): Promise<boolean> => {
+  //   try {
+  //     this._privateKey = (await createPrivateKey()) ?? null;
+  //     if (this.privateKey) {
+  //       fs.writeFileSync(privateKeyPath, this.privateKey);
+  //       return true;
+  //     }
+  //     throw new Error('Private Key Empty!');
+  //   } catch (err) {
+  //     this.log.error('Failed to create the private key.', err);
+  //     return false;
+  //   }
+  // }
 
   /**
    * Create and save a new csr
    */
-  private createAndSaveCSR = async (): Promise<boolean> => {
-    try {
-      this._csr = await createCSR({
-        country: 'AU',
-        state: 'VIC',
-        organization: 'dJPoida',
-        organizationUnit: 'Telepresence Bot',
-        emailAddress: 'djpoida+tpbot@gmail.com',
-        commonName: this.internalIp ?? undefined,
-        altNames: this.publicIp ? [this.publicIp, 'tpbot.local'] : ['tpbot.local'],
-        clientKey: this.privateKey ?? undefined,
-      });
-      if (this.csr) {
-        fs.writeFileSync(csrPath, this.csr);
-        return true;
-      }
-      throw new Error('CSR Empty!');
-    } catch (err) {
-      this.log.error('Failed to create the csr.', err);
-      return false;
-    }
-  }
+  // private createAndSaveCSR = async (): Promise<boolean> => {
+  //   try {
+  //     this._csr = await createCSR({
+  //       country: 'AU',
+  //       state: 'VIC',
+  //       organization: 'dJPoida',
+  //       organizationUnit: 'Telepresence Bot',
+  //       emailAddress: 'djpoida+tpbot@gmail.com',
+  //       commonName: this.internalIp ?? undefined,
+  //       altNames: this.publicIp ? [this.publicIp, 'tpbot.local'] : ['tpbot.local'],
+  //       clientKey: this.privateKey ?? undefined,
+  //     });
+  //     if (this.csr) {
+  //       fs.writeFileSync(csrPath, this.csr);
+  //       return true;
+  //     }
+  //     throw new Error('CSR Empty!');
+  //   } catch (err) {
+  //     this.log.error('Failed to create the csr.', err);
+  //     return false;
+  //   }
+  // }
 
   /**
    * Create and save a new certificate
    */
-  private createAndSaveCertificate = async (): Promise<boolean> => {
-    try {
-      const result = await createCertificate({
-        csr: this.csr ?? undefined,
-        days: 500,
-        serviceKey: this.privateKey || undefined,
-        selfSigned: true,
-      });
+  // private createAndSaveCertificate = async (): Promise<boolean> => {
+  //   try {
+  //     const result = await createCertificate({
+  //       csr: this.csr ?? undefined,
+  //       days: 500,
+  //       serviceKey: this.privateKey || undefined,
+  //       selfSigned: true,
+  //     });
 
-      this._certificate = result.certificate;
-      this._serviceKey = result.serviceKey;
-      if (this.certificate && this.serviceKey) {
-        fs.writeFileSync(certificatePath, this.certificate);
-        fs.writeFileSync(serviceKeyPath, this.serviceKey);
-        return true;
-      }
-      throw new Error('Certificate Empty!');
-    } catch (err) {
-      this.log.error('Failed to create the certificate.', err);
-      return false;
-    }
-  }
+  //     this._certificate = result.certificate;
+  //     this._serviceKey = result.serviceKey;
+  //     if (this.certificate && this.serviceKey) {
+  //       fs.writeFileSync(certificatePath, this.certificate);
+  //       fs.writeFileSync(serviceKeyPath, this.serviceKey);
+  //       return true;
+  //     }
+  //     throw new Error('Certificate Empty!');
+  //   } catch (err) {
+  //     this.log.error('Failed to create the certificate.', err);
+  //     return false;
+  //   }
+  // }
 
   /**
    * Create all new keys for this machine
@@ -260,16 +259,16 @@ export class SecurityManager {
       this.log.info('Skipping the creation of new certificate assets - nothing has changed.');
       try {
         // Load the existing private key
-        this._privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
+        // this._privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
 
         // Load the existing csr
-        this._csr = fs.readFileSync(privateKeyPath, 'utf-8');
+        // this._csr = fs.readFileSync(privateKeyPath, 'utf-8');
 
         // Load the existing client keyt
-        this._serviceKey = fs.readFileSync(serviceKeyPath, 'utf-8');
+        // this._serviceKey = fs.readFileSync(serviceKeyPath, 'utf-8');
 
         // Load the existing certificate
-        this._certificate = fs.readFileSync(certificatePath, 'utf-8');
+        // this._certificate = fs.readFileSync(certificatePath, 'utf-8');
 
         // At this point - return true, we're happy.
         return true;
@@ -285,56 +284,28 @@ export class SecurityManager {
     if (!(await this.saveSystemAttributes())) return false;
 
     // Create a new private key
-    if (!(await this.createAndSavePrivateKey())) return false;
+    // if (!(await this.createAndSavePrivateKey())) return false;
 
     // Create a new csr
-    if (!(await this.createAndSaveCSR())) return false;
+    // if (!(await this.createAndSaveCSR())) return false;
 
     // Create a new certificate
-    if (!(await this.createAndSaveCertificate())) return false;
+    // if (!(await this.createAndSaveCertificate())) return false;
 
     // use the newly created assets
     return true;
   };
 
   /**
-   * The private .pem file created when spinning up the server for the first time
-   */
-  get privateKey(): null | string {
-    return this._privateKey;
-  }
-
-  /**
-   * The .csr file created when spinning up the server for the first time
-   */
-  get csr(): null | string {
-    return this._csr;
-  }
-
-  /**
-   * The .client.key file created when spinning up the server for the first time
-   */
-  get serviceKey(): null | string {
-    return this._serviceKey;
-  }
-
-  /**
-   * The public .cert file created when spinning up the server for the first time
-   */
-  get certificate(): null | string {
-    return this._certificate;
-  }
-
-  /**
    * The SSL credentials required by the express server to open up an HTTPS socket
    */
   get credentials(): null | ServerOptions {
-    if (this.serviceKey && this.certificate) {
-      return {
-        key: [{ pem: this.privateKey }, { pem: this.serviceKey }],
-        cert: this.certificate,
-      } as ServerOptions;
-    }
+    // if (this.serviceKey && this.certificate) {
+    //   return {
+    //     key: [{ pem: this.privateKey }, { pem: this.serviceKey }],
+    //     cert: this.certificate,
+    //   } as ServerOptions;
+    // }
     return null;
   }
 

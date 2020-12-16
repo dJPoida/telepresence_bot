@@ -9,6 +9,7 @@ import { SettingsModal } from './modals/settings.modal';
 import { TelemetryContext } from '../providers/telemetry.provider';
 import { DropDownMenu } from './drop-down-menu';
 import { LinksModal } from './modals/links.modal';
+import { SecurityModal } from './modals/security.modal';
 
 export type MenuBarProps = {
   className?: string,
@@ -18,6 +19,7 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [isLinksModalVisible, setLinksModalVisible] = useState(false);
+  const [isSecurityModalVisible, setSecurityModalVisible] = useState(false);
   const { connected, latency } = useContext(SocketContext);
   const { power: { battery } } = useContext(TelemetryContext);
   const displayBattery = battery ? `${battery}%` : '??%';
@@ -50,9 +52,15 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
             },
             {
               key: 'links',
-              icon: ICON.ADD_CIRCLE,
+              icon: ICON.EXTERNAL_LINK,
               label: 'Links',
               onClick: () => { setLinksModalVisible(!isLinksModalVisible); },
+            },
+            {
+              key: 'security',
+              icon: ICON.LOCK,
+              label: 'Security',
+              onClick: () => { setSecurityModalVisible(!isSecurityModalVisible); },
             },
           ]}
         />
@@ -108,6 +116,12 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
         <LinksModal
           visible={isLinksModalVisible}
           onCloseRequest={() => setLinksModalVisible(false)}
+        />
+      )}
+      {isSecurityModalVisible && (
+        <SecurityModal
+          visible={isSecurityModalVisible}
+          onCloseRequest={() => setSecurityModalVisible(false)}
         />
       )}
     </div>

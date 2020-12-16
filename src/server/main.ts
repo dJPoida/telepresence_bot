@@ -24,28 +24,3 @@ securityManager.generateKeys()
     (error) => log.error('Critical Error: ', error),
   )
   .catch((error) => log.error('Critical Error: ', error));
-
-// SSL Certificate properties
-// const certProps: pem.CertificateCreationOptions = {
-//   days: 365,
-//   selfSigned: true,
-//   commonName: env.HOSTNAME,
-// };
-
-// TODO: actually generate a physical certificate based on the configuration in the env file
-// TODO: pass the previously generated config into the pem.createCertificate function
-// TODO: allow the certificate to be generated from the config app via a button
-// TODO: add a download certificate button in the config app
-// TODO: add a download certificate button in the control app
-// TODO: install https://www.npmjs.com/package/nat-api and allow the configuration of the appropriate parameters in the config app
-
-// pem.createCertificate(certProps, (error, keys) => {
-//   if (error) {
-//     throw error;
-//   }
-
-//   const credentials = { key: keys.serviceKey, cert: keys.certificate } as ServerOptions;
-
-//   // eslint-disable-next-line no-unused-vars
-//   const kernel = new Kernel(credentials);
-// });

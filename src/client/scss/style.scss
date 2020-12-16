@@ -66,3 +66,8 @@ body {
 hr {
   border-color: $border-color;
 }
+
+i + span,
+span + i {
+  margin-left: 0.5em;
+}

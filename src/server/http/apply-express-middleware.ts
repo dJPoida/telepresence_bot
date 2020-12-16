@@ -1,5 +1,4 @@
 import express from 'express';
-import pem from 'pem';
 import { ServerOptions } from 'https';
 import { resolve } from 'path';
 
@@ -51,9 +50,6 @@ export function applyExpressMiddleware(
       res.setHeader('Content-Disposition', 'attachment; filename="filename.crt"');
       res.setHeader('Content-Type', 'application/x-pem-file');
       res.send(credentials.cert);
-      // pem.getPublicKey(credentials.cert as string, (key) => {
-      //   console.log(credentials.cert);
-      // });
     } else {
       res.status(500).json({ message: 'Certificate not available.' });
     }
