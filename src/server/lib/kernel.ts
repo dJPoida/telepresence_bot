@@ -1,7 +1,7 @@
-import { Express } from 'express';
+import express, { Express } from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import http from 'http';
-import https, { ServerOptions } from 'https';
+import https from 'https';
 import { KernelEventMap, KERNEL_EVENT } from '../const/kernel-event.const';
 import { applyExpressMiddleware } from '../http/apply-express-middleware';
 import { env } from '../env';
@@ -20,11 +20,12 @@ import { PowerMonitor } from './power-monitor';
 import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monitor-event.const';
 import { GPIODriver } from './gpio-driver';
 import { VideoManager } from './video-manager';
+import { SecurityManager } from './security-manager';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
 
-  public readonly credentials: ServerOptions;
+  public readonly securityManager: SecurityManager;
 
   public readonly expressApp: Express;
 
@@ -53,12 +54,23 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   /**
   * @constructor
   */
-  constructor(expressApp: Express, httpServer: https.Server, credentials: ServerOptions) {
+  constructor(securityManager: SecurityManager) {
     super();
 
-    this.credentials = credentials;
-    this.expressApp = expressApp;
-    this.httpServer = httpServer;
+    this.securityManager = securityManager;
+    if (!this.securityManager.credentials) throw new Error('Cannot boot the kernel without SSL credentials.');
+
+    // Express app
+    this.expressApp = express();
+
+    // http server
+    this.httpServer = https.createServer(this.securityManager.credentials, (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+    ) => {
+      this.expressApp(req, res);
+    });
+
     this.i2cDriver = new I2cDriver();
     this.gpioDriver = new GPIODriver();
     this.inputManager = new InputManager();
@@ -117,7 +129,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
 
     // spin up all of the other drivers
     Promise.all([
-      this.videoManager.initialise(this.credentials),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.videoManager.initialise(this.securityManager.credentials!),
       this.speakerDriver.initialise(),
       this.powerMonitor.initialise(),
       this.inputManager.initialise(),
@@ -209,7 +222,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.log.info('Kernel Running');
 
     // Apply the routing and middleware to the express app
-    applyExpressMiddleware(this.expressApp);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    applyExpressMiddleware(this.expressApp, this.securityManager.credentials!);
 
     // Server running
     this.httpServer.listen(env.HTTPS_PORT, () => this.log.info(`Http server running on port ${env.HTTPS_PORT}`));

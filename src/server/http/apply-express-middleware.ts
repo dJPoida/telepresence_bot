@@ -1,4 +1,6 @@
 import express from 'express';
+import pem from 'pem';
+import { ServerOptions } from 'https';
 import { resolve } from 'path';
 
 import { configureEnvironment } from './configure-environment';
@@ -12,6 +14,7 @@ import { env } from '../env';
 */
 export function applyExpressMiddleware(
   expressApp: express.Express,
+  credentials: ServerOptions,
 ): express.Express {
   expressApp.use(express.json());
   expressApp.use(express.urlencoded({ extended: false }));
@@ -37,6 +40,23 @@ export function applyExpressMiddleware(
   // Serve the client config
   expressApp.get('/config', (req, res) => {
     sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/config.html'));
+  });
+
+  // Serve the public certificate
+  expressApp.get('/cert', (req, res) => {
+    if (credentials.cert) {
+      res.setHeader('Content-Description', 'File Transfer');
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Content-Disposition', 'attachment');
+      res.setHeader('Content-Disposition', 'attachment; filename="filename.crt"');
+      res.setHeader('Content-Type', 'application/x-pem-file');
+      res.send(credentials.cert);
+      // pem.getPublicKey(credentials.cert as string, (key) => {
+      //   console.log(credentials.cert);
+      // });
+    } else {
+      res.status(500).json({ message: 'Certificate not available.' });
+    }
   });
 
   // Custom static assets sender (because dev middleware and express.static don't play well together)

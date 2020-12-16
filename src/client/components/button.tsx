@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { forwardRef, ReactNode } from 'react';
 import classNames from 'classnames';
 
 export type ButtonProps = {
+  children: ReactNode,
   className?: string,
   active?: boolean,
   disabled?: boolean,
@@ -10,27 +11,32 @@ export type ButtonProps = {
   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
 };
 
-export const Button:React.FC<ButtonProps> = ({
+export type Ref = HTMLButtonElement;
+
+export const Button = forwardRef<Ref, ButtonProps>(function Button({
   active,
   children,
   className,
   disabled,
   square,
   onClick,
-}) => (
-  <button
-    type="button"
-    className={classNames(
-      'btn',
-      className,
-      {
-        active,
-        square,
-      },
-    )}
-    disabled={disabled}
-    onClick={onClick}
-  >
-    {children}
-  </button>
-);
+}, ref) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={classNames(
+        'btn',
+        className,
+        {
+          active,
+          square,
+        },
+      )}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+});

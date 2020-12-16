@@ -63,6 +63,7 @@ export function applyWebpackDevelopmentMiddleware(
       path: '/__webpack_hmr',
       heartbeat: 2 * 1000,
       quiet: true,
+      reload: true,
     },
   ));
 

@@ -1,11 +1,8 @@
 import React, { useContext } from 'react';
 import classNames from 'classnames';
 
-import { Button } from '../button';
-import { Icon } from '../icon';
 import { Modal, ModalProps } from '../modal';
 
-import { ICON } from '../../const/icon.constant';
 import { LocalSettingsContext } from '../../providers/local-settings.provider';
 import { Checkbox } from '../checkbox';
 

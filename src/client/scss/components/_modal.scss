@@ -20,7 +20,7 @@
     flex-direction: column;
     padding: 0 1em;
     min-width: 50vw;
-    min-height: 50vh;
+    min-height: 50vh; 
     max-width: 90vw;
     max-height: 90vh;
     border: 1px solid $border-color;
@@ -40,6 +40,7 @@
     
     .modal-body {
       padding: 1em 0;
+      flex: 1;
     }
 
     .modal-footer {

@@ -5,7 +5,6 @@ const wpMerge = require('webpack-merge');
 
 const path = require('path');
 const webpack = require('webpack');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
@@ -42,10 +41,14 @@ module.exports = wpMerge.merge(baseConfig, {
       {
         test: /\.ts(x?)$/,
         exclude: /node_modules/,
-        loader: 'ts-loader',
-        options: {
-          configFile: tsConfigPath,
-        },
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: tsConfigPath,
+            },
+          },
+        ],
       },
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       {

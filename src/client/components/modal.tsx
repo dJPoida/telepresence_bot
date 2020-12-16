@@ -10,6 +10,7 @@ export type ModalProps = {
   onCloseRequest?: () => void,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const portalContainer = document.getElementById('portal_root')!;
 if (!portalContainer) throw new Error('Could not locate the "portal_root" DOM node!');
 
