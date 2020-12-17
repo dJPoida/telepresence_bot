@@ -42,14 +42,16 @@ export function applyExpressMiddleware(
   });
 
   // Serve the public certificate
-  expressApp.get('/cert', (req, res) => {
-    if (credentials.cert) {
+  expressApp.get('/crt/:filename', (req, res) => {
+    // Only allow the user to download the tpbot.ca.cert & tpbot.cert
+    const { filename } = req.params;
+    if (['tpbot.ca.crt', 'tpbot.crt'].includes(filename)) {
       res.setHeader('Content-Description', 'File Transfer');
       res.setHeader('Content-Disposition', 'inline');
       res.setHeader('Content-Disposition', 'attachment');
-      res.setHeader('Content-Disposition', 'attachment; filename="filename.crt"');
-      res.setHeader('Content-Type', 'application/x-pem-file');
-      res.send(credentials.cert);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/x-x509-ca-cert');
+      res.send(filename === 'tpbot.ca.crt' ? credentials.ca : credentials.cert);
     } else {
       res.status(500).json({ message: 'Certificate not available.' });
     }

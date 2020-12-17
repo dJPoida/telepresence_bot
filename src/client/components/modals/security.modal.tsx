@@ -25,17 +25,10 @@ export const SecurityModal: React.FC<SecurityModalProps> = (props) => {
       </p>
       <Button
         className="primary"
-        onClick={() => { window.location.pathname = '/tpbot_ca.cer'; }}
+        onClick={() => { window.location.pathname = '/crt/tpbot.ca.crt'; }}
       >
         <Icon icon={ICON.DOWNLOAD} />
-        <span>tpbot.ca.cer</span>
-      </Button>
-      <Button
-        className="primary"
-        onClick={() => { window.location.pathname = '/tpbot.cer'; }}
-      >
-        <Icon icon={ICON.DOWNLOAD} />
-        <span>tpbot.cer</span>
+        <span>tpbot.ca.crt</span>
       </Button>
     </Modal>
   );

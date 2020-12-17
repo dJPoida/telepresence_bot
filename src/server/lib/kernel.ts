@@ -58,7 +58,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     super();
 
     this.securityManager = securityManager;
-    if (!this.securityManager.credentials) throw new Error('Cannot boot the kernel without SSL credentials.');
+    if (!this.securityManager.credentials.cert) throw new Error('Cannot boot the kernel without SSL credentials.');
 
     // Express app
     this.expressApp = express();

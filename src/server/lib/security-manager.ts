@@ -5,55 +5,17 @@ import publicIp from 'public-ip';
 import internalIp from 'internal-ip';
 
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
+import { openssl } from '../helpers/openssl.helper';
+import { deleteFileIfExists } from '../helpers/delete-file-if-exists.helper';
 
 const securityFilesPath = path.resolve(__dirname, '../../../security');
 const systemAttributesPath = path.resolve(securityFilesPath, 'security.json');
-const privateKeyPath = path.resolve(securityFilesPath, 'tpbot.pem');
-const csrPath = path.resolve(securityFilesPath, 'tpbot.csr');
-const serviceKeyPath = path.resolve(securityFilesPath, 'tpbot.client.pem');
-const certificatePath = path.resolve(securityFilesPath, 'tpbot.cert');
-
-// /**
-//  * Promisified version of pem.createPrivateKey
-//  */
-// const createPrivateKey = (): Promise<string> => new Promise((resolve, reject) => {
-//   pem.createPrivateKey((error, result) => {
-//     if (error) {
-//       reject(error);
-//     } else {
-//       resolve(result.key);
-//     }
-//   });
-// });
-
-// /**
-//  * Promisified version of pem.createCSR
-//  */
-// const createCSR = (options: CSRCreationOptions): Promise<string> => new Promise((resolve, reject) => {
-//   pem.createCSR(options, (error, result) => {
-//     if (error) {
-//       reject(error);
-//     } else {
-//       resolve(result.csr);
-//     }
-//   });
-// });
-
-// /**
-//  * Promisified version of pem.createCertificate
-//  */
-// const createCertificate = (options: CertificateCreationOptions): Promise<{
-//   serviceKey: string,
-//   certificate: string,
-// }> => new Promise((resolve, reject) => {
-//   pem.createCertificate(options, (error, result) => {
-//     if (error) {
-//       reject(error);
-//     } else {
-//       resolve({ serviceKey: result.serviceKey, certificate: result.certificate });
-//     }
-//   });
-// });
+const caKeyPath = path.resolve(securityFilesPath, 'tpbot.ca.key');
+const caCertificatePath = path.resolve(securityFilesPath, 'tpbot.ca.crt');
+const privateKeyPath = path.resolve(securityFilesPath, 'tpbot.key');
+const csrExtensionsPath = path.resolve(securityFilesPath, 'tpbot.ext');
+const csrPath = path.resolve(securityFilesPath, 'tpbot.req');
+const certificatePath = path.resolve(securityFilesPath, 'tpbot.crt');
 
 /**
  * Responsible for creating the certificates required to deliver an SSL peer to peer connection
@@ -67,13 +29,17 @@ export class SecurityManager {
 
   private _publicIp: null | string = null;
 
-  // private _privateKey: null | string = null;
+  private _caKey: null | string = null;
 
-  // private _csr: null | string = null;
+  private _caCertificate: null | string = null;
 
-  // private _serviceKey: null | string = null;
+  private _privateKey: null | string = null;
 
-  // private _certificate: null | string = null;
+  private _csrExtensions: null | string = null;
+
+  private _csr: null | string = null;
+
+  private _certificate: null | string = null;
 
   /**
    * Create the directory where the security files will be stored
@@ -162,73 +128,169 @@ export class SecurityManager {
   }
 
   /**
-   * Create and save a new private key
+   * Create and save a new CA key
    */
-  // private createAndSavePrivateKey = async (): Promise<boolean> => {
-  //   try {
-  //     this._privateKey = (await createPrivateKey()) ?? null;
-  //     if (this.privateKey) {
-  //       fs.writeFileSync(privateKeyPath, this.privateKey);
-  //       return true;
-  //     }
-  //     throw new Error('Private Key Empty!');
-  //   } catch (err) {
-  //     this.log.error('Failed to create the private key.', err);
-  //     return false;
-  //   }
-  // }
+  private createAndSaveCAKey = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating CA Key');
+      // Delete the existing key
+      await deleteFileIfExists(caKeyPath);
+
+      // Fire off openssl
+      await openssl(`genrsa -out "${path.relative(process.cwd(), caKeyPath)}" 2048`);
+
+      // load in the new key
+      this._caKey = fs.readFileSync(caKeyPath, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the CA Key', err);
+      return false;
+    }
+  }
 
   /**
-   * Create and save a new csr
+   * Create and save a new CA Certificate
    */
-  // private createAndSaveCSR = async (): Promise<boolean> => {
-  //   try {
-  //     this._csr = await createCSR({
-  //       country: 'AU',
-  //       state: 'VIC',
-  //       organization: 'dJPoida',
-  //       organizationUnit: 'Telepresence Bot',
-  //       emailAddress: 'djpoida+tpbot@gmail.com',
-  //       commonName: this.internalIp ?? undefined,
-  //       altNames: this.publicIp ? [this.publicIp, 'tpbot.local'] : ['tpbot.local'],
-  //       clientKey: this.privateKey ?? undefined,
-  //     });
-  //     if (this.csr) {
-  //       fs.writeFileSync(csrPath, this.csr);
-  //       return true;
-  //     }
-  //     throw new Error('CSR Empty!');
-  //   } catch (err) {
-  //     this.log.error('Failed to create the csr.', err);
-  //     return false;
-  //   }
-  // }
+  private createAndSaveCACertificate = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating CA Certificate');
+
+      // Delete the existing certificate
+      await deleteFileIfExists(caCertificatePath);
+
+      // Fire off openssl
+      await openssl(`req -x509 -sha256 -new -key "${
+        path.relative(process.cwd(), caKeyPath)
+      }" -out "${
+        path.relative(process.cwd(), caCertificatePath)
+      }" -days 730 -subj /CN="TPBot CA"`);
+
+      // load in the new key
+      this._caCertificate = fs.readFileSync(caCertificatePath, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the CA Certificate', err);
+      return false;
+    }
+  }
 
   /**
-   * Create and save a new certificate
+   * Create and save a new Private key
    */
-  // private createAndSaveCertificate = async (): Promise<boolean> => {
-  //   try {
-  //     const result = await createCertificate({
-  //       csr: this.csr ?? undefined,
-  //       days: 500,
-  //       serviceKey: this.privateKey || undefined,
-  //       selfSigned: true,
-  //     });
+  private createAndSavePrivateKey = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating Private Key');
+      // Delete the existing key
+      await deleteFileIfExists(privateKeyPath);
 
-  //     this._certificate = result.certificate;
-  //     this._serviceKey = result.serviceKey;
-  //     if (this.certificate && this.serviceKey) {
-  //       fs.writeFileSync(certificatePath, this.certificate);
-  //       fs.writeFileSync(serviceKeyPath, this.serviceKey);
-  //       return true;
-  //     }
-  //     throw new Error('Certificate Empty!');
-  //   } catch (err) {
-  //     this.log.error('Failed to create the certificate.', err);
-  //     return false;
-  //   }
-  // }
+      // Fire off openssl
+      await openssl(`genrsa -out "${path.relative(process.cwd(), privateKeyPath)}" 2048`);
+
+      // load in the new key
+      this._privateKey = fs.readFileSync(privateKeyPath, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the Private Key', err);
+      return false;
+    }
+  }
+
+  /**
+   * Create and save the CSR Extensions file
+   */
+  private createAndSaveCSRExtensions = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating CSR Extensions');
+      // Delete the existing file
+      await deleteFileIfExists(csrExtensionsPath);
+
+      // create the string
+      this._csrExtensions = [
+        'subjectAltName = @alt_names',
+        '',
+        '[alt_names]',
+        'DNS.1 = localhost',
+        'IP.1 = 127.0.0.1',
+        `IP.2 = ${this.internalIp}`,
+      ].join('\n');
+
+      // Write the extensions to disk
+      fs.writeFileSync(csrExtensionsPath, this._csrExtensions, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the CSR Extensions', err);
+      return false;
+    }
+  }
+
+  /**
+   * Create and save a new CSR
+   */
+  private createAndSaveCSR = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating CSR');
+      // Delete the existing key
+      await deleteFileIfExists(csrPath);
+
+      // country: 'AU',
+      // state: 'VIC',
+      // organization: 'dJPoida',
+      // organizationUnit: 'Telepresence Bot',
+      // emailAddress: 'djpoida+tpbot@gmail.com',
+      // commonName: this.internalIp ?? undefined,
+      // altNames: this.publicIp ? [this.publicIp, 'tpbot.local'] : ['tpbot.local'],
+      // clientKey: this.privateKey ?? undefined,
+
+      // Fire off openssl
+      await openssl([
+        'req',
+        '-new',
+        `-out "${path.relative(process.cwd(), csrPath)}"`,
+        `-key "${path.relative(process.cwd(), privateKeyPath)}"`,
+        `-subj /CN=${this.publicIp}`,
+      ].join(' '));
+
+      // load in the new key
+      this._csr = fs.readFileSync(csrPath, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the CSR', err);
+      return false;
+    }
+  }
+
+  /**
+   * Create and save a new Certificaet
+   */
+  private createAndSaveCertificate = async (): Promise<boolean> => {
+    try {
+      this.log.info(' - creating Certificate');
+      // Delete the existing key
+      await deleteFileIfExists(certificatePath);
+
+      // Fire off openssl
+      await openssl([
+        'x509',
+        '-req',
+        '-sha256',
+        `-in ${path.relative(process.cwd(), csrPath)}`,
+        `-out ${path.relative(process.cwd(), certificatePath)}`,
+        `-CAkey ${path.relative(process.cwd(), caKeyPath)}`,
+        `-CA ${path.relative(process.cwd(), caCertificatePath)}`,
+        '-days 365',
+        '-CAcreateserial',
+        '-CAserial serial',
+        `-extfile "${path.relative(process.cwd(), csrExtensionsPath)}`,
+      ].join(' '));
+
+      // load in the new key
+      this._certificate = fs.readFileSync(certificatePath, 'ascii');
+      return true;
+    } catch (err) {
+      this.log.error('Failed to create the Certificate', err);
+      return false;
+    }
+  }
 
   /**
    * Create all new keys for this machine
@@ -245,52 +307,83 @@ export class SecurityManager {
     // Ensure the target path where we are going to write the keys exists
     if (!this.createSecurityFilesPath()) return false;
 
-    // Compare the details required with any previously stored details to determine if we need to generate new documents
-    const regenerateCertificate = (
-      !(await this.checkPreviousSystemAttributes())
-      || !fs.existsSync(privateKeyPath)
-      || !fs.existsSync(csrPath)
-      || !fs.existsSync(serviceKeyPath)
-      || !fs.existsSync(certificatePath)
+    // Only regenerate the certificate authority if any of the files are missing
+    const regenerateCA = (
+      !fs.existsSync(caKeyPath)
+      || !fs.existsSync(caCertificatePath)
     );
 
-    // Attempt to load the existing (stored) credentials
-    if (!regenerateCertificate) {
-      this.log.info('Skipping the creation of new certificate assets - nothing has changed.');
+    // Attempt to load the existing (stored) certificate
+    if (regenerateCA) {
+      // For whatever reason, there is now a need to regenrate the CA.
+      this.log.info('Generating new CA assets...');
+
+      // Create a new CA Key
+      if (!(await this.createAndSaveCAKey())) return false;
+
+      // Create a new CA Certificate
+      if (!(await this.createAndSaveCACertificate())) return false;
+    } else {
+      this.log.info('CA Exists');
       try {
-        // Load the existing private key
-        // this._privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
+        // Load the existing CA Key
+        this._caKey = fs.readFileSync(caKeyPath, 'ascii');
 
-        // Load the existing csr
-        // this._csr = fs.readFileSync(privateKeyPath, 'utf-8');
-
-        // Load the existing client keyt
-        // this._serviceKey = fs.readFileSync(serviceKeyPath, 'utf-8');
-
-        // Load the existing certificate
-        // this._certificate = fs.readFileSync(certificatePath, 'utf-8');
-
-        // At this point - return true, we're happy.
-        return true;
+        // Load the existing CA Cert
+        this._caCertificate = fs.readFileSync(caCertificatePath, 'ascii');
       } catch (err) {
-        this.log.error('Looks like there was a problem loading the certificates');
+        this.log.error('Looks like there was a problem loading one or more of the the CA assets', err);
+        return false;
       }
     }
 
-    // For whatever reason, there is now a need to regenrate the credentials.
-    this.log.info('Generating new certificate assets...');
+    // regenerate the certificate if any of the server details change (ip addresses etc...)
+    const regenerateCertificate = (
+      !(await this.checkPreviousSystemAttributes())
+      || !fs.existsSync(privateKeyPath)
+      || !fs.existsSync(csrExtensionsPath)
+      || !fs.existsSync(csrPath)
+      || !fs.existsSync(certificatePath)
+    );
 
-    // Store the security attributes for future use
-    if (!(await this.saveSystemAttributes())) return false;
+    // Attempt to load the existing (stored) certificate
+    if (regenerateCertificate) {
+      // For whatever reason, there is now a need to regenrate the credentials.
+      this.log.info('Generating new certificate assets...');
 
-    // Create a new private key
-    // if (!(await this.createAndSavePrivateKey())) return false;
+      // Store the security attributes for future use
+      if (!(await this.saveSystemAttributes())) return false;
 
-    // Create a new csr
-    // if (!(await this.createAndSaveCSR())) return false;
+      // Create a new private key
+      if (!(await this.createAndSavePrivateKey())) return false;
 
-    // Create a new certificate
-    // if (!(await this.createAndSaveCertificate())) return false;
+      // Create new csr extensions
+      if (!(await this.createAndSaveCSRExtensions())) return false;
+
+      // Create a new csr
+      if (!(await this.createAndSaveCSR())) return false;
+
+      // Create a new certificate
+      if (!(await this.createAndSaveCertificate())) return false;
+    } else {
+      this.log.info('Certificate exists and is current');
+      try {
+        // Load the existing private key
+        this._privateKey = fs.readFileSync(privateKeyPath, 'ascii');
+
+        // Load the existing csr extensions
+        this._csrExtensions = fs.readFileSync(csrExtensionsPath, 'ascii');
+
+        // Load the existing csr
+        this._csr = fs.readFileSync(csrPath, 'ascii');
+
+        // Load the existing certificate
+        this._certificate = fs.readFileSync(certificatePath, 'ascii');
+      } catch (err) {
+        this.log.error('Looks like there was a problem loading one or more of the the certificate assets', err);
+        return false;
+      }
+    }
 
     // use the newly created assets
     return true;
@@ -299,14 +392,12 @@ export class SecurityManager {
   /**
    * The SSL credentials required by the express server to open up an HTTPS socket
    */
-  get credentials(): null | ServerOptions {
-    // if (this.serviceKey && this.certificate) {
-    //   return {
-    //     key: [{ pem: this.privateKey }, { pem: this.serviceKey }],
-    //     cert: this.certificate,
-    //   } as ServerOptions;
-    // }
-    return null;
+  get credentials(): ServerOptions {
+    return {
+      ca: this._caCertificate ?? '',
+      cert: this._certificate ?? '',
+      key: this._privateKey ?? '',
+    };
   }
 
   /**

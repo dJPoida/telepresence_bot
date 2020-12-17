@@ -60,7 +60,6 @@ class Logger {
 
   private _winston: winston.Logger;
 
-
   /**
    * @constructor
    */
@@ -90,7 +89,7 @@ class Logger {
     const fileTransport = new winston
       .transports
       .File({
-        filename: path.resolve(env.LOG_PATH, `tpbot.log`),
+        filename: path.resolve(env.LOG_PATH, 'tpbot.log'),
         maxsize: MAX_LOG_FILE_SIZE,
         level: CURRENT_LOG_LEVEL,
       });
@@ -108,7 +107,6 @@ class Logger {
     this._winston.on('error', this.handleError.bind(this));
   }
 
-
   /**
    * @description
    * Handle an error in winston
@@ -120,7 +118,6 @@ class Logger {
     console.error(`!!!WARNING!!! - WINSTON ERROR - UNABLE TO LOG TO TRANSPORTS - ${err}`, err);
   }
 
-
   /** * @description * Write an standard log * @param message * @param context * @param meta */
   log(message: string, context: string, meta: any) {
     this._winston.log({
@@ -130,7 +127,6 @@ class Logger {
       meta,
     });
   }
-
 
   /** * @description * Write an error message log * @param message * @param context * @param error */
   error(message: string, context: string, error: any) {
@@ -142,7 +138,6 @@ class Logger {
     });
   }
 
-
   /** * @description * Write a warning message log * @param message * @param context * @param error */
   warn(message: string, context: string, meta: any) {
     this._winston.log({
@@ -152,7 +147,6 @@ class Logger {
       meta,
     });
   }
-
 
   /** * @description * Write an info message log * @param message * @param context * @param meta */
   info(message: string, context: string, meta: any) {
@@ -164,7 +158,6 @@ class Logger {
     });
   }
 
-
   /** * @description * Write a debug message log * @param message * @param context * @param meta */
   debug(message: string, context: string, meta: any) {
     this._winston.log({
@@ -174,7 +167,6 @@ class Logger {
       meta,
     });
   }
-
 
   /** * @description * Write a silly message log * @param message * @param context * @param meta */
   silly(message: string, context: string, meta: any) {
