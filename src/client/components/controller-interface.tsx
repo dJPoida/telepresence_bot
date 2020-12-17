@@ -8,6 +8,7 @@ import { Joystick } from './joystick';
 import { MenuBar } from './menu-bar';
 import { StatsOverlay } from './stats-overlay';
 import { VideoContainer } from './video-container';
+import { APP_MODE } from '../const/app-mode.constant';
 
 export const ControllerInterface: React.FC = () => {
   const { connected } = useContext(SocketContext);
@@ -19,7 +20,7 @@ export const ControllerInterface: React.FC = () => {
 
       <VideoContainer />
 
-      <MenuBar />
+      <MenuBar appMode={APP_MODE.CONTROLLER} />
 
       {localSettings.showStatsOverlay && (
         <StatsOverlay />

@@ -5,9 +5,12 @@
   right: 0;
   height: 4rem;
   padding: 1rem;
-  background-color: $primary-color;
   display: flex;
   justify-content: space-between;
+
+  &.controller {
+    background-color: $primary-color;
+  }
 
   .status-indicator-wrapper {
     background-color: $background-color;

@@ -5,8 +5,10 @@ import { Modal, ModalProps } from '../modal';
 
 import { LocalSettingsContext } from '../../providers/local-settings.provider';
 import { Checkbox } from '../checkbox';
+import { AN_APP_MODE } from '../../const/app-mode.constant';
 
 export type SettingsModalProps = ModalProps & {
+  appMode: AN_APP_MODE,
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {

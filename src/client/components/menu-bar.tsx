@@ -10,12 +10,17 @@ import { TelemetryContext } from '../providers/telemetry.provider';
 import { DropDownMenu } from './drop-down-menu';
 import { LinksModal } from './modals/links.modal';
 import { SecurityModal } from './modals/security.modal';
+import { AN_APP_MODE, APP_MODE } from '../const/app-mode.constant';
 
 export type MenuBarProps = {
   className?: string,
+  appMode: AN_APP_MODE,
 };
 
-export const MenuBar: React.FC<MenuBarProps> = () => {
+export const MenuBar: React.FC<MenuBarProps> = ({
+  className,
+  appMode,
+}) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [isLinksModalVisible, setLinksModalVisible] = useState(false);
@@ -28,12 +33,12 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
   const menuButtonRef = useRef<null | HTMLButtonElement>(null);
 
   return (
-    <div className="menu-bar">
+    <div className={classNames('menu-bar', className, appMode)}>
       <div className="menu-button-wrapper">
         <Button
           ref={menuButtonRef}
           active={isMenuOpen}
-          className="primary"
+          className={appMode === APP_MODE.DISPLAY ? 'transparent' : 'primary'}
           square
           onClick={() => { setMenuOpen(!isMenuOpen); }}
         >
@@ -110,18 +115,21 @@ export const MenuBar: React.FC<MenuBarProps> = () => {
         <SettingsModal
           visible={isSettingsModalVisible}
           onCloseRequest={() => setSettingsModalVisible(false)}
+          appMode={appMode}
         />
       )}
       {isLinksModalVisible && (
         <LinksModal
           visible={isLinksModalVisible}
           onCloseRequest={() => setLinksModalVisible(false)}
+          appMode={appMode}
         />
       )}
       {isSecurityModalVisible && (
         <SecurityModal
           visible={isSecurityModalVisible}
           onCloseRequest={() => setSecurityModalVisible(false)}
+          appMode={appMode}
         />
       )}
     </div>

@@ -35,6 +35,8 @@ export const env = {
   USE_WEBPACK: envBool('USE_WEBPACK'),
   HTTPS_PORT: envNum('HTTPS_PORT'),
   WEB_RTC_PORT: envNum('WEB_RTC_PORT'),
+  ENABLE_UPNP_PORT_MAPPING: envBool('ENABLE_UPNP_PORT_MAPPING'),
+  PORT_MAPPING_TTL: envNum('PORT_MAPPING_TTL'),
   SOURCE_PATH: resolve(__dirname, '../../src'),
   DIST_PATH: resolve(__dirname, '../../dist'),
   CLIENT_KEY: envString('CLIENT_KEY'),

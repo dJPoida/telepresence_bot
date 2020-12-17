@@ -97,7 +97,7 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
   const createPeer = useCallback(() => {
     console.log(`Creating peer as "${clientType}"`);
     peer.current = new Peer(clientType, {
-      host: window.location.host,
+      host: window.location.hostname,
       port: global.WEB_RTC_PORT,
       path: '/',
       config: {
@@ -111,6 +111,7 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       setPeerId(null);
       setWebRTCMessage(err.message);
       console.error('Peer error: ', err);
+      throw new Error(err);
     });
 
     // When the peer connection to the server can be established - set the WebRTCState to READY

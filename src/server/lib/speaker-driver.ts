@@ -82,6 +82,6 @@ export class SpeakerDriver extends TypedEventEmitter<SpeakerDriverEventMap> {
    * Fired when this class is initialised
    */
   private handleInitialised() {
-    this.log.info('Motor Driver Initialised.');
+    this.log.info('Speaker Driver Initialised.');
   }
 }

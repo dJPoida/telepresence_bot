@@ -6,8 +6,10 @@ import { Modal, ModalProps } from '../modal';
 
 import { ICON } from '../../const/icon.constant';
 import { Button } from '../button';
+import { AN_APP_MODE } from '../../const/app-mode.constant';
 
 export type SecurityModalProps = ModalProps & {
+  appMode: AN_APP_MODE,
 }
 
 export const SecurityModal: React.FC<SecurityModalProps> = (props) => {

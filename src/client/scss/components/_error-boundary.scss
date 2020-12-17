@@ -1,0 +1,26 @@
+.error-boundary {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  color: $red;
+  overflow-y: auto;
+
+  >* {
+    margin: var(--universal-padding);
+  }
+
+  >i {
+    font-size: 25vmin;
+  }
+
+  h1 {
+  }
+
+  .error {
+
+  }
+}

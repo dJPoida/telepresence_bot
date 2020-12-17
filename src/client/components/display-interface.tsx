@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { SocketContext } from '../providers/socket.provider';
 import { VideoContainer } from './video-container';
 import { MenuBar } from './menu-bar';
+import { APP_MODE } from '../const/app-mode.constant';
 
 export const DisplayInterface: React.FC = () => {
   const { connected } = useContext(SocketContext);
@@ -11,7 +12,7 @@ export const DisplayInterface: React.FC = () => {
     <div className={classNames('display-interface', { connected })}>
       <VideoContainer />
 
-      <MenuBar />
+      <MenuBar appMode={APP_MODE.DISPLAY} />
     </div>
   );
 };

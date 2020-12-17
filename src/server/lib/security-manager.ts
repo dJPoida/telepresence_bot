@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs';
-import { ServerOptions } from 'https';
 import publicIp from 'public-ip';
 import internalIp from 'internal-ip';
+import { ServerOptions } from 'https';
 
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { openssl } from '../helpers/openssl.helper';
@@ -212,6 +212,7 @@ export class SecurityManager {
         'DNS.1 = localhost',
         'IP.1 = 127.0.0.1',
         `IP.2 = ${this.internalIp}`,
+        `IP.3 = ${this.publicIp}`,
       ].join('\n');
 
       // Write the extensions to disk

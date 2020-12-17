@@ -21,6 +21,7 @@ import { PowerMonitorEventMap, POWER_MONITOR_EVENT } from '../const/power-monito
 import { GPIODriver } from './gpio-driver';
 import { VideoManager } from './video-manager';
 import { SecurityManager } from './security-manager';
+import { NetworkManager } from './network-manager';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -46,6 +47,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly powerMonitor: PowerMonitor
 
   public readonly videoManager: VideoManager;
+
+  public readonly networkManager: NetworkManager;
 
   private _initialised = false;
 
@@ -79,6 +82,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.speakerDriver = new SpeakerDriver();
     this.powerMonitor = new PowerMonitor();
     this.videoManager = new VideoManager();
+    this.networkManager = new NetworkManager();
 
     this.initialise();
   }
@@ -136,6 +140,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       this.inputManager.initialise(),
       this.ledStripDriver.initialise(),
       this.motorDriver.initialise(this.i2cDriver.i2cBus, this.gpioDriver.pigpio),
+      this.networkManager.initialise(),
     ]).then(() => {
       this.bindEvents();
 
@@ -169,6 +174,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
         await this.videoManager.shutDown();
       } catch (error) {
         this.log.error(`Error while shutting down the Video Manager: ${error}`);
+      }
+
+      try {
+        await this.networkManager.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down the Network Manager: ${error}`);
       }
 
       try {
