@@ -4,8 +4,10 @@ import Peer from 'peerjs';
 import { A_WEBRTC_CLIENT_TYPE, WEBRTC_CLIENT_TYPE } from '../const/webrtc-client-type.constant';
 import { A_WEBRTC_STATE, WEBRTC_STATE } from '../const/webrtc-state.constant';
 import { SocketContext } from './socket.provider';
-import { SOCKET_CLIENT_MESSAGE } from '../../shared/constants/socket-client-message.const';
 import { TelemetryContext } from './telemetry.provider';
+import { CLIENT_COMMAND } from '../../shared/constants/client-command.const';
+import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
+import { LocalSettingsContext } from './local-settings.provider';
 
 type WebRTCContext = {
   webRTCState: A_WEBRTC_STATE,
@@ -13,6 +15,7 @@ type WebRTCContext = {
   devicesAvailable: boolean,
   webRTCMessage: string,
   peerId: null | string,
+  remotePeerId: null | string,
   authoriseMediaCapture: () => void,
   setSmallCameraElement: (element: HTMLVideoElement | null) => void,
   setLargeCameraElement: (element: HTMLVideoElement | null) => void,
@@ -36,16 +39,18 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
   const [devicesAvailable, setDevicesAvailable] = useState(false);
   const [webRTCMessage, setWebRTCMessage] = useState('Initialising...');
   const [peerId, setPeerId] = useState<null | string>(null);
+  const [remotePeerId, setRemotePeerId] = useState<null | string>(null);
   const largeCameraElement = useRef<null | HTMLVideoElement>(null);
   const smallCameraElement = useRef<null | HTMLVideoElement>(null);
   const remoteStream = useRef<null | MediaStream>(null);
   const localStream = useRef<null | MediaStream>(null);
   const [peer, setPeer] = useState<null | Peer>(null);
   const connection = useRef<null | Peer.DataConnection>(null);
-  const call = useRef<null | Peer.MediaConnection>(null);
+  const [call, setCall] = useState<null | Peer.MediaConnection>(null);
 
-  const { connected: socketConnected, sendMessage } = useContext(SocketContext);
+  const { socketConnected, sendCommand, ws } = useContext(SocketContext);
   const { network, isLocalConnection } = useContext(TelemetryContext);
+  const { micMuted, audioMuted } = useContext(LocalSettingsContext);
 
   /**
    * Fired when the peer connection encounters an error
@@ -201,6 +206,11 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
           facingMode: 'user',
         },
       });
+      // stop capturing audio (if required)
+      localStream.current.getAudioTracks().forEach((track) => {
+        console.log(micMuted ? `muting track ${track.id}` : `unmuting track ${track.id}`);
+        track.enabled = !micMuted;
+      });
       setDevicesAvailable(true);
       setWebRTCState(WEBRTC_STATE.DEVICES_AVAILABLE);
     } catch (error) {
@@ -239,31 +249,61 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
   }, [webRTCState, peer, createPeer, socketConnected, isLocalConnection, network]);
 
   /**
-   * Report the Peer ID to the server so that connecting clients know who to connect to
+   * When the socket is connected to the server, bind the listeners for relevant incoming messages
    */
   useEffect(() => {
-    if (peer) {
-      console.log(`Reporting change of peerId for clientType "${clientType}" to "${peerId}"`);
-      sendMessage({ type: SOCKET_CLIENT_MESSAGE.SET_PEER_ID, payload: { clientType, peerId } });
+    if (clientType === WEBRTC_CLIENT_TYPE.CALLER) {
+      // Respond to a display PeerId change
+      const handleDisplayPeerIdChanged = ({ peerId: newPeerId }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]) => {
+        setRemotePeerId(newPeerId);
+      };
+      if (ws) {
+        ws.on(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, handleDisplayPeerIdChanged);
+      }
+      return () => {
+        if (ws) {
+          ws.off(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, handleDisplayPeerIdChanged);
+        }
+      };
     }
-  }, [clientType, peerId, peer, sendMessage]);
+
+    // A Display Client's remote peer ID is the controller's peer ID
+    // When the controller's peer ID changes - reload the page to pick up the new controller.
+    const handleControllerPeerIdChanged = ({ peerId: newPeerId }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']]) => {
+      if (remotePeerId === null) {
+        setRemotePeerId(newPeerId);
+      } else if (remotePeerId !== newPeerId) {
+        window.location.reload();
+      }
+    };
+    if (ws) {
+      ws.on(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, handleControllerPeerIdChanged);
+    }
+    return () => {
+      if (ws) {
+        ws.off(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, handleControllerPeerIdChanged);
+      }
+    };
+  }, [clientType, peerId, remotePeerId, ws]);
 
   /**
    * Call the host
    */
   const doCallHost = useCallback(() => {
-    if (peer && localStream.current) {
+    if (peer && localStream.current && remotePeerId) {
       console.log('Calling the receiver...');
       setWebRTCState(WEBRTC_STATE.CALLING);
       // Connect to the inverse ID depending on this instance clientType
-      call.current = peer.call(WEBRTC_CLIENT_TYPE.RECEIVER, localStream.current);
-      call.current.on('stream', (stream) => {
+      const newCall = peer.call(remotePeerId, localStream.current);
+      newCall.on('stream', (stream) => {
         remoteStream.current = stream;
         setWebRTCState(WEBRTC_STATE.CONNECTED);
       });
-      call.current.on('close', () => {
+      newCall.on('close', () => {
         setWebRTCState(WEBRTC_STATE.READY);
+        setCall(null);
       });
+      setCall(newCall);
     } else if (!peer) {
       console.error('Cannot start a call if the peer is not connected.');
       setWebRTCState(WEBRTC_STATE.DEVICE_ERROR);
@@ -273,16 +313,36 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       setWebRTCState(WEBRTC_STATE.DEVICE_ERROR);
       setWebRTCMessage('Cannot start a call if there is no local stream.');
     }
-  }, [peer]);
+  }, [peer, remotePeerId]);
+
+  /**
+   * Report the peer ID to the server whenever it is required
+   */
+  useEffect(() => {
+    sendCommand({ type: CLIENT_COMMAND.SET_PEER_ID, payload: { clientType, peerId } });
+  }, [sendCommand, clientType, peerId]);
+
+  /**
+   * Toggle the webrtc state between ready and no remote available when the remote peer is
+   * available / removed
+   */
+  useEffect(() => {
+    if (webRTCState === WEBRTC_STATE.READY && !remotePeerId) {
+      setWebRTCState(WEBRTC_STATE.NO_REMOTE_AVAILABLE);
+    } else if (webRTCState === WEBRTC_STATE.NO_REMOTE_AVAILABLE && !!remotePeerId) {
+      setWebRTCState(WEBRTC_STATE.READY);
+    }
+  }, [webRTCState, remotePeerId]);
 
   /**
    * Terminate the connection attempt or call in progress
    */
   const doEndCall = useCallback(() => {
-    if (connection.current) {
-      connection.current.close();
+    console.log('Ending call...');
+    if (call) {
+      call.close();
     }
-  }, []);
+  }, [call]);
 
   /**
    * Set the reference for the small camera element
@@ -308,6 +368,17 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
   }, [createPeer, peer, webRTCState]);
 
   /**
+   * Set the mic to muted
+   */
+  useEffect(() => {
+    // stop capturing audio
+    localStream.current?.getAudioTracks().forEach((track) => {
+      console.log(micMuted ? `muting track ${track.id}` : `unmuting track ${track.id}`);
+      track.enabled = !micMuted;
+    });
+  }, [micMuted]);
+
+  /**
    * Render
    */
   return (
@@ -317,6 +388,7 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       devicesAvailable,
       webRTCMessage,
       peerId,
+      remotePeerId,
       authoriseMediaCapture,
       setSmallCameraElement: doSetSmallCameraElement,
       setLargeCameraElement: doSetLargeCameraElement,

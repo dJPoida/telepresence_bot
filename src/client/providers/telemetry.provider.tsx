@@ -35,7 +35,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
 
-  const { connected, ws, sendCommand } = useContext(SocketContext);
+  const { socketConnected: connected, ws, sendCommand } = useContext(SocketContext);
 
   /**
    * Reset all client-side input values to their defaults

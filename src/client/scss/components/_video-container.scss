@@ -5,11 +5,7 @@
   right: 0;
   bottom: 0;
 
-  .controller-interface & {
-    top: 6rem;
-  }
-
-  #large-video {
+  .large-video {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -19,7 +15,7 @@
     transform: translate(-50%, -50%) scaleX(-1);
   }
 
-  #small-video {
+  .small-video {
     position: absolute;
     bottom: 0%;
     left: 50%;
@@ -29,6 +25,41 @@
     transform: translateX(-50%) scaleX(-1);
   }
 
+  .call-controls {
+    display: flex;
+    position:absolute;
+    bottom: var(--universal-padding);
+    left: 50%;
+    transform: translateX(-50%);
+
+    >*{
+      margin-left: var(--universal-padding);
+
+      &:first-of-type {
+        margin-left: 0;
+      }
+    }
+  }
+
+  .controller-interface & {
+    top: 6rem;
+    @media (orientation: landscape) {
+      .small-video{
+        left: auto;
+        right: 33vmin;
+        transform: scaleX(-1);
+      }
+    }
+  }
+ 
+  .display-interface & {
+    .small-video{
+      left: auto;
+      right: 0;
+      transform: scaleX(-1);
+    }
+  }
+ 
   .overlay-wrapper {
     position: absolute;
     top: 0;
@@ -38,6 +69,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    pointer-events: none;
 
     .message {
       display: flex;
@@ -45,12 +77,12 @@
       justify-content: center;
       align-items: center;
       border: 1px solid $border-color;
-      background-color: $light-background-color;
+      background-color: $background-color;
       padding: var(--universal-padding);
-      border-radius: var(--border-radius);
       color: $text-color;
       max-width: 80%;
       text-align: center;
+      pointer-events: all;
   
       &.error {
         color: $danger-color;

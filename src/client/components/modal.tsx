@@ -1,6 +1,9 @@
 import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
+import { Icon } from './icon';
+import { Button } from './button';
+import { ICON } from '../const/icon.constant';
 
 export type ModalProps = {
   className?: string,
@@ -36,6 +39,11 @@ export const Modal: React.FC<ModalProps> = ({
         {headerComponent && (
           <div className="modal-header">
             {headerComponent}
+            <div className="close-button">
+              <Button noBorder noPadding square onClick={() => { if (onCloseRequest) { onCloseRequest(); } }}>
+                <Icon icon={ICON.CROSS} />
+              </Button>
+            </div>
           </div>
         )}
 

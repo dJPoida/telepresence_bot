@@ -10,7 +10,7 @@ import { global } from '../const/global.constant';
 type SocketContext = {
   sendCommand: (payload: ClientCommandPayload) => unknown,
   sendMessage: (payload: ClientSocketMessagePayload) => unknown,
-  connected: boolean,
+  socketConnected: boolean,
   latency: null | number,
   ws: SocketIOClient.Socket;
 };
@@ -35,7 +35,7 @@ const ws = socketIoClient(
  * @param param0
  */
 export const SocketProvider: React.FC = function SocketProvider({ children }) {
-  const [connected, setConnected] = useState<SocketContext['connected']>(false);
+  const [connected, setConnected] = useState<SocketContext['socketConnected']>(false);
   const [latency, setLatency] = useState<SocketContext['latency']>(null);
 
   /**
@@ -177,7 +177,7 @@ export const SocketProvider: React.FC = function SocketProvider({ children }) {
         sendCommand,
         sendMessage,
         ws,
-        connected,
+        socketConnected: connected,
         latency,
       }}
     >

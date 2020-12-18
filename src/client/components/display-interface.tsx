@@ -6,11 +6,11 @@ import { MenuBar } from './menu-bar';
 import { APP_MODE } from '../const/app-mode.constant';
 
 export const DisplayInterface: React.FC = () => {
-  const { connected } = useContext(SocketContext);
+  const { socketConnected: connected } = useContext(SocketContext);
 
   return (
     <div className={classNames('display-interface', { connected })}>
-      <VideoContainer />
+      <VideoContainer appMode={APP_MODE.DISPLAY} />
 
       <MenuBar appMode={APP_MODE.DISPLAY} />
     </div>

@@ -7,6 +7,8 @@ export type ButtonProps = {
   active?: boolean,
   disabled?: boolean,
   square?: boolean,
+  noPadding?: boolean,
+  noBorder?: boolean,
 
   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
 };
@@ -19,6 +21,8 @@ export const Button = forwardRef<Ref, ButtonProps>(function Button({
   className,
   disabled,
   square,
+  noPadding,
+  noBorder,
   onClick,
 }, ref) {
   return (
@@ -31,6 +35,8 @@ export const Button = forwardRef<Ref, ButtonProps>(function Button({
         {
           active,
           square,
+          'no-padding': noPadding,
+          'no-border': noBorder,
         },
       )}
       disabled={disabled}

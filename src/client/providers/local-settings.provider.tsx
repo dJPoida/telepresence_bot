@@ -2,14 +2,20 @@ import React, { createContext, useCallback, useState } from 'react';
 
 type LocalSettingsContext = {
   showStatsOverlay: boolean,
+  micMuted: boolean,
+  audioMuted: boolean,
 
   setShowStatsOverlay: (value: boolean) => unknown,
+  setMicMuted: (value: boolean) => unknown,
+  setAudioMuted: (value: boolean) => unknown,
 };
 
 export const LocalSettingsContext = createContext<LocalSettingsContext>(null as never);
 
 type LocalSettingsState = {
   showStatsOverlay: LocalSettingsContext['showStatsOverlay'],
+  micMuted: LocalSettingsContext['micMuted'],
+  audioMuted: LocalSettingsContext['audioMuted'],
 };
 
 const LOCAL_STORAGE_SETTINGS_KEY = 'userSettings';
@@ -22,6 +28,8 @@ const loadSettingsFromLocalStorage = (): LocalSettingsState => {
 
   return {
     showStatsOverlay: false,
+    setMicMuted: false,
+    setAudioMuted: false,
 
     ...previousData,
   };
@@ -51,8 +59,12 @@ export const LocalSettingsProvider: React.FC = function LocalSettingsProvider({ 
   return (
     <LocalSettingsContext.Provider value={{
       showStatsOverlay: localSettings.showStatsOverlay,
+      micMuted: localSettings.micMuted,
+      audioMuted: localSettings.audioMuted,
 
       setShowStatsOverlay: (showStatsOverlay: LocalSettingsContext['showStatsOverlay']) => doSetLocalSettings({ showStatsOverlay }),
+      setMicMuted: (micMuted: LocalSettingsContext['micMuted']) => doSetLocalSettings({ micMuted }),
+      setAudioMuted: (audioMuted: LocalSettingsContext['audioMuted']) => doSetLocalSettings({ audioMuted }),
     }}
     >
       {children}

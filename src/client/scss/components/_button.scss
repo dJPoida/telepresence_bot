@@ -9,18 +9,26 @@ $active-darken-amount: 15%;
   align-items: center;
   font-family: $font-family;
   font-size: 2rem;
-  border-radius: var(--border-radius);
   cursor: pointer;
   background-color: var(--btn-background);
   color: var(--btn-foreground);
 
+  &.no-border {
+    border: none;
+  }
+
   &.square {
     width: 2em;
     height: 2em;
+
+    &.no-padding {
+      width: 1em;
+      height: 1em;
+    }
   }
 
   &.transparent {
-    --btn-background: rgba(0, 0, 0, 0);
+    --btn-background: rgba(127, 127, 127, 0.1);
     --btn-foreground: #{$border-color};
 
     &.active,
@@ -57,6 +65,40 @@ $active-darken-amount: 15%;
     &:active {
       --btn-background: #{darken($danger-color, $active-darken-amount) };
       --btn-foreground: #{$white};
+    }
+  }
+
+  &.call {
+    --btn-background: rgba(127, 127, 127, 0.25);
+    --btn-foreground: #{$white};
+
+    &.active,
+    &:active {
+      --btn-background: #{darken($white, $active-darken-amount) };
+      --btn-foreground: #{$white};
+    }
+
+    &.green {
+      --btn-foreground: #{$success-color};
+    }
+
+    &.green.active,
+    &.green:active {
+      --btn-background: #{darken($success-color, $active-darken-amount) };
+    }
+
+    &.red {
+      --btn-foreground: #{$danger-color};
+    }
+
+    &.red.active,
+    &.red:active {
+      --btn-background: #{darken($danger-color, $active-darken-amount) };
+    }
+
+    &:disabled {
+      pointer-events: none;
+      --btn-foreground: #{$text-color-disabled};
     }
   }
 }

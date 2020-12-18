@@ -15,13 +15,13 @@ $border-color: darken($white, 50%);
 $success-color: $green;
 $danger-color: $red;
 $warning-color: $yellow;
+$text-color-disabled: darken($white, 25%);
 
 $font-family: 'Share Tech Mono', monospace;
 
 
 :root {
   --universal-padding: 1rem;
-  --border-radius: 0.25rem;
 }
 
 @import './fonts/telepresence-bot-icons';

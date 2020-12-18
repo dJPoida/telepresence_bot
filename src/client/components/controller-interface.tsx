@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import classNames from 'classnames';
-import Peer from 'peerjs';
 import { LocalSettingsContext } from '../providers/local-settings.provider';
 import { SocketContext } from '../providers/socket.provider';
 import { TelemetryContext } from '../providers/telemetry.provider';
@@ -9,16 +8,21 @@ import { MenuBar } from './menu-bar';
 import { StatsOverlay } from './stats-overlay';
 import { VideoContainer } from './video-container';
 import { APP_MODE } from '../const/app-mode.constant';
+import { WebRTCContext } from '../providers/webrtc.provider';
+import { WEBRTC_STATE } from '../const/webrtc-state.constant';
 
 export const ControllerInterface: React.FC = () => {
-  const { connected } = useContext(SocketContext);
+  const { socketConnected } = useContext(SocketContext);
   const telemetry = useContext(TelemetryContext);
   const localSettings = useContext(LocalSettingsContext);
+  const { webRTCState } = useContext(WebRTCContext);
+
+  const controlsDisabled = !socketConnected || (webRTCState !== WEBRTC_STATE.CONNECTED);
 
   return (
-    <div className={classNames('controller-interface', { connected })}>
+    <div className={classNames('controller-interface', { enabled: !controlsDisabled })}>
 
-      <VideoContainer />
+      <VideoContainer appMode={APP_MODE.CONTROLLER} />
 
       <MenuBar appMode={APP_MODE.CONTROLLER} />
 
@@ -32,7 +36,7 @@ export const ControllerInterface: React.FC = () => {
           {/* Pan / Tilt Joystick */}
           <div className="joystick-wrapper">
             <Joystick
-              disabled={!connected}
+              disabled={controlsDisabled}
               springBack={false}
               value={telemetry.panTiltInput}
               onUpdate={telemetry.setPanTiltInput}
@@ -51,7 +55,7 @@ export const ControllerInterface: React.FC = () => {
           {/* Direction Joystick */}
           <div className="joystick-wrapper">
             <Joystick
-              disabled={!connected}
+              disabled={controlsDisabled}
               verboseUpdate
               value={telemetry.driveInput}
               onUpdate={telemetry.setDriveInput}

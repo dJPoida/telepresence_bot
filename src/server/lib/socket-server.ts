@@ -262,6 +262,36 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
       this.io.emit(SOCKET_SERVER_MESSAGE.NETWORK_STATUS, payload);
     }
   }
+
+  /**
+   * Let clients know that a controller's webrtc peer ID has changed
+   */
+  sendControllerPeerIdChangedToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, payload);
+    }
+  }
+
+  /**
+   * Let clients know that a display's webrtc peer ID has changed
+   */
+  sendDisplayPeerIdChangedToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, payload);
+    }
+  }
 }
 
 export const socketServer = SocketServer.getInstance();

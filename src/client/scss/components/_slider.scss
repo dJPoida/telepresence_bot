@@ -21,7 +21,6 @@
     bottom: var(--slider-padding);
     background: $black;
     background: linear-gradient(90deg, lighten($black, 25%) 25%, $black 50%, lighten($black, 25%) 75%);
-    border-radius: 1em;
     border: 2px solid $border-color;
     pointer-events: none;
   }

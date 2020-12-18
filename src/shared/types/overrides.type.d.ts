@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/adjacent-overload-signatures */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientSocketMessageMap, SOCKET_CLIENT_MESSAGE } from '../constants/socket-client-message.const';
@@ -33,7 +34,6 @@ declare global {
 
       // CLIENT -> SERVER
       emit(event: SOCKET_CLIENT_MESSAGE['AUTH'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]): any;
-      emit(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]): any;
       emit(event: SOCKET_CLIENT_MESSAGE['COMMAND'], payload?: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]): any;
 
       // SERVER -> CLIENT
@@ -72,6 +72,14 @@ declare global {
       on(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
       once(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']]>): any;
+
+      on(event: SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]>): any;
     }
   }
 
@@ -98,6 +106,8 @@ declare global {
       emit(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['NETWORK_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['CONTROLLER_PEER_ID_CHANGED']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]): any;
 
       // CLIENT -> SERVER
       on(event: SOCKET_CLIENT_MESSAGE['AUTH'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']]>): any;
@@ -107,10 +117,6 @@ declare global {
       on(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
       once(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
       addEventListener(event: SOCKET_CLIENT_MESSAGE['COMMAND'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']]>): any;
-
-      on(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
-      once(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
-      addEventListener(event: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], listener: Listener<ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']]>): any;
     }
   }
 }

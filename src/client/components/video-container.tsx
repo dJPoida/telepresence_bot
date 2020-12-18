@@ -1,16 +1,23 @@
-import { connected } from 'process';
-import React, { createRef, useContext, useEffect } from 'react';
-import { connect } from 'socket.io-client';
+import React, { createRef, useContext, useEffect, useState } from 'react';
+import classNames from 'classnames';
+import { ICON } from '../const/icon.constant';
 import { WEBRTC_CLIENT_TYPE } from '../const/webrtc-client-type.constant';
-import { WEBRTC_STATE } from '../const/webrtc-state.constant';
+import { A_WEBRTC_STATE, WEBRTC_STATE } from '../const/webrtc-state.constant';
 import { WebRTCContext } from '../providers/webrtc.provider';
-import { Button } from './button';
+import { Icon } from './icon';
 import { TVStatic } from './tv-static';
+import { ConfirmationModal } from './modals/confirmation.modal';
+import { AN_APP_MODE, APP_MODE } from '../const/app-mode.constant';
+import { LocalSettingsContext } from '../providers/local-settings.provider';
+import { Button } from './button';
 
 export type VideoContainerProps = {
+  appMode: AN_APP_MODE,
 };
 
-export const VideoContainer: React.FC<VideoContainerProps> = () => {
+export const VideoContainer: React.FC<VideoContainerProps> = ({
+  appMode,
+}) => {
   const {
     clientType,
     webRTCState,
@@ -21,7 +28,17 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
     setLargeCameraElement,
     callHost,
     endCall,
+    reconnectPeer,
   } = useContext(WebRTCContext);
+
+  const {
+    setMicMuted,
+    micMuted,
+    setAudioMuted,
+    audioMuted,
+  } = useContext(LocalSettingsContext);
+
+  const [isConfirmHangupModalVisible, setConfirmHangupModalVisible] = useState<boolean>(false);
 
   const largeVideoRef = createRef<HTMLVideoElement>();
   const smallVideoRef = createRef<HTMLVideoElement>();
@@ -42,8 +59,8 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
         id="large-video"
         ref={largeVideoRef}
         autoPlay
-        muted={webRTCState !== WEBRTC_STATE.CONNECTED}
-        className="mx-auto d-block"
+        muted={(webRTCState !== WEBRTC_STATE.CONNECTED) || audioMuted}
+        className="mx-auto d-block large-video"
       />
 
       <video
@@ -53,12 +70,61 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
         height="300"
         autoPlay
         muted
-        className="mx-auto d-block"
+        className="mx-auto d-block small-video"
       />
 
       { !devicesAvailable && (
         <TVStatic />
       )}
+
+      <div className="call-controls">
+        {/* Mute Mic Button */}
+        <Button
+          square
+          className={classNames(
+            'call',
+            {
+              red: micMuted,
+            },
+          )}
+          onClick={() => setMicMuted(!micMuted)}
+        >
+          <Icon icon={micMuted ? ICON.MIC_OFF : ICON.MIC} />
+        </Button>
+
+        {/* Mute Button */}
+        <Button
+          square
+          className={classNames(
+            'call',
+            {
+              red: audioMuted,
+            },
+          )}
+          onClick={() => setAudioMuted(!audioMuted)}
+        >
+          <Icon icon={audioMuted ? ICON.VOLUME_OFF : ICON.VOLUME_UP} />
+        </Button>
+
+        {/* Hangup Button */}
+        {appMode === APP_MODE.CONTROLLER && (
+          <Button
+            square
+            className={
+              classNames(
+                'call',
+                {
+                  red: ([WEBRTC_STATE.CALLING, WEBRTC_STATE.CONNECTED] as A_WEBRTC_STATE[]).includes(webRTCState),
+                },
+              )
+            }
+            disabled={!([WEBRTC_STATE.CALLING, WEBRTC_STATE.CONNECTED] as A_WEBRTC_STATE[]).includes(webRTCState)}
+            onClick={() => { setConfirmHangupModalVisible(!isConfirmHangupModalVisible); }}
+          >
+            <Icon icon={ICON.CALL_END} />
+          </Button>
+        )}
+      </div>
 
       <div className="overlay-wrapper">
         {/* Capture devices could not be initialised */}
@@ -104,8 +170,16 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
             <Button
               onClick={callHost}
             >
-              Call TP Bot
+              <Icon icon={ICON.CALL} />
+              <span>Call TP Bot</span>
             </Button>
+          </div>
+        )}
+
+        {/* Waiting for TP Bot */}
+        { ((clientType === WEBRTC_CLIENT_TYPE.CALLER) && (webRTCState === WEBRTC_STATE.NO_REMOTE_AVAILABLE)) && (
+          <div className="message">
+            <span>Searching for the Telepresence Bot...</span>
           </div>
         )}
 
@@ -117,6 +191,20 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
         )}
 
       </div>
+
+      {isConfirmHangupModalVisible && (
+        <ConfirmationModal
+          visible={isConfirmHangupModalVisible}
+          onCloseRequest={() => setConfirmHangupModalVisible(false)}
+          onConfirm={() => { setConfirmHangupModalVisible(false); endCall(); }}
+          confirmIcon={ICON.CALL_END}
+          confirmLabel="End Call"
+        >
+          <p>
+            Are you sure you want to hang up?
+          </p>
+        </ConfirmationModal>
+      )}
 
     </div>
   );

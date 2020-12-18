@@ -18,6 +18,10 @@ export const SOCKET_SERVER_MESSAGE = {
   POWER_STATUS: 'ps',
   NETWORK_STATUS: 'ns',
 
+  // WebRTC
+  CONTROLLER_PEER_ID_CHANGED: 'cpid',
+  DISPLAY_PEER_ID_CHANGED: 'dpid',
+
   // Events
   EVENT_SHUT_DOWN: 'esd',
 
@@ -41,6 +45,9 @@ export interface SocketServerMessageMap {
   [SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS]: Pick<BotStatusDto, 'panTilt'>;
   [SOCKET_SERVER_MESSAGE.POWER_STATUS]: Pick<BotStatusDto, 'power'>;
   [SOCKET_SERVER_MESSAGE.NETWORK_STATUS]: Pick<BotStatusDto, 'network'>;
+
+  [SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED]: { peerId: null | string };
+  [SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED]: { peerId: null | string };
 
   [SOCKET_SERVER_MESSAGE.EVENT_SHUT_DOWN]: { reason: string };
 

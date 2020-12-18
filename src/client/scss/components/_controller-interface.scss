@@ -8,11 +8,11 @@
   max-height: 100%;
   overflow: hidden;
 
-  &.connected {
+  &.enabled {
     .controls-wrapper {
       opacity: 1;
     }
-  }
+  } 
 
   .controls-wrapper {
     position: absolute;
@@ -23,19 +23,12 @@
     right: 0;
     height: 33vmin;
     opacity: 0.5;
+    pointer-events: none;
 
     .controls {
       background-color: $primary-color;
       display: flex;
       
-      &.left {
-        border-top-right-radius: 1rem;
-      }
-      
-      &.right {
-        border-top-left-radius: 1rem;
-      }
-
       .joystick-wrapper {
         width: 33vmin;
         height: 33vmin;

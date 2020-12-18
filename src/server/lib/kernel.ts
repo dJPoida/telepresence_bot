@@ -23,6 +23,8 @@ import { VideoManager } from './video-manager';
 import { SecurityManager } from './security-manager';
 import { NetworkManager } from './network-manager';
 import { NetworkManagerEventMap, NETWORK_MANAGER_EVENT } from '../const/network-manager-event.const';
+import { VIDEO_MANAGER_EVENT } from '../const/video-manager-event.const';
+import { A_WEBRTC_CLIENT_TYPE, WEBRTC_CLIENT_TYPE } from '../../client/const/webrtc-client-type.constant';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -277,6 +279,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     socketServer
       .on(SOCKET_SERVER_EVENT.CLIENT_CONNECTED, this.handleClientConnected.bind(this))
       .on(SOCKET_SERVER_EVENT.CLIENT_DISCONNECTED, this.handleClientDisconnected.bind(this));
+
+    // Listen for input events
     this.inputManager
       .on(INPUT_MANAGER_EVENT.DRIVE_INPUT_CHANGE, (payload) => setImmediate(() => this.handleDriveInputChanged(payload)))
       .on(INPUT_MANAGER_EVENT.PAN_TILT_INPUT_CHANGE, (payload) => setImmediate(() => this.handlePanTiltInputChanged(payload)));
@@ -288,6 +292,11 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     // Listen for Network Manager Events
     this.networkManager
       .on(NETWORK_MANAGER_EVENT.UPDATED, (payload) => setImmediate(() => this.handleNetworkStatusUpdated(payload)));
+
+    // Listen for Video Manager Events
+    this.videoManager
+      .on(VIDEO_MANAGER_EVENT.CONTROLLER_PEER_ID_CHANGED, (payload) => setImmediate(() => socketServer.sendControllerPeerIdChangedToClients(payload)))
+      .on(VIDEO_MANAGER_EVENT.DISPLAY_PEER_ID_CHANGED, (payload) => setImmediate(() => socketServer.sendDisplayPeerIdChangedToClients(payload)));
   }
 
   /**

@@ -30,6 +30,9 @@
 
 
     .modal-header {
+      display: flex;
+      justify-content: space-between;
+      
       >* {
         margin: 0;
       }
@@ -39,6 +42,9 @@
     }
     
     .modal-body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 1em 0;
       flex: 1;
  
@@ -54,6 +60,9 @@
 
       padding: 1em 0;
       border-bottom: 1px solid $border-color;
+
+      display: flex;
+      justify-content: space-between;
     }
   }
 }

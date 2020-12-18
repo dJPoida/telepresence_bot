@@ -4,6 +4,7 @@ export const WEBRTC_STATE = {
   PEER_ERROR: 'peerError',
   CALL_ERROR: 'callError',
   DEVICES_AVAILABLE: 'devicesAvailable',
+  NO_REMOTE_AVAILABLE: 'noRemoteAvailable',
   READY: 'ready',
   CALLING: 'connecting',
   CONNECTED: 'connected',
