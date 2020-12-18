@@ -133,6 +133,14 @@ export class LEDStripDriver extends TypedEventEmitter<LEDStripEventMap> {
     if (this.initialised) {
       this.log.info('LED Device shutting down...');
 
+      // Turn off all of the LEDs
+      this.setLEDs({
+        front: COLOR.BLACK,
+        right: COLOR.BLACK,
+        rear: COLOR.BLACK,
+        left: COLOR.BLACK,
+      });
+
       // Make sure that the LED strip is reset prior to terminating the application
       this.device.reset();
     }
