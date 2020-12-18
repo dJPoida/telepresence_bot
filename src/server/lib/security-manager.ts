@@ -3,6 +3,7 @@ import fs from 'fs';
 import publicIp from 'public-ip';
 import internalIp from 'internal-ip';
 import { ServerOptions } from 'https';
+import { networkInterfaces } from 'os';
 
 import { classLoggerFactory } from '../helpers/class-logger-factory.helper';
 import { openssl } from '../helpers/openssl.helper';
@@ -28,7 +29,9 @@ export class SecurityManager {
   private _internalIp: null | string = null;
 
   private _publicIp: null | string = null;
-
+  
+  private _localIps: string[] = [];
+  
   private _caKey: null | string = null;
 
   private _caCertificate: null | string = null;
@@ -57,7 +60,7 @@ export class SecurityManager {
   }
 
   /**
-   * Detect the local IP address of the internet facing adapter
+   * Detect the internal IP address of the internet facing adapter
    */
   private detectInternalIpAddress = async (): Promise<boolean> => {
     try {
@@ -83,6 +86,30 @@ export class SecurityManager {
   };
 
   /**
+   * Detect any additional local IP addresses
+   */
+  public detectLocalIpAddresses = async (): Promise<boolean> => {
+    try {
+      const nets = networkInterfaces();
+      this._localIps = [];
+
+      for (const name of Object.keys(nets)) {
+        for (const net of (nets[name] ?? [])) {
+          // skip over non-ipv4 and internal (i.e. 127.0.0.1) addresses
+          if (net.family === 'IPv4' && !net.internal && (net.address !== this.internalIp) && (net.address !== this.publicIp)) {
+            this._localIps.push(net.address);
+          }
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      this.log.error('Failed to determine the internal IP address', err);
+      return false;
+    }
+  };
+
+  /**
    * Check previously stored system attributes against the current environment
    * to determine if new security keys need to be created
    */
@@ -90,10 +117,14 @@ export class SecurityManager {
     // Attempt to load the existing JSON
     let existingJSON: null | {
       internalIp: null | string,
+      localIps: string[],
       publicIp: null | string,
     } = null;
     try {
       existingJSON = JSON.parse(fs.readFileSync(systemAttributesPath, 'utf-8'));
+
+      const existingIPsConcat = (existingJSON?.localIps ?? []).join();
+      const localIpConcat = this._localIps.join();
 
       // Return true if the contents of the JSON are the same as our current detected config
       return (
@@ -101,6 +132,7 @@ export class SecurityManager {
         && (existingJSON?.publicIp === this.publicIp)
         && !!this.internalIp
         && (existingJSON?.internalIp === this.internalIp)
+        && (existingIPsConcat === localIpConcat)
       );
     } catch (err) {
       // No biggie - just return FALSE - the configs are different.
@@ -116,6 +148,7 @@ export class SecurityManager {
     const attributes = {
       internalIp: this.internalIp,
       publicIp: this.publicIp,
+      localIps: this.localIps,
     };
 
     try {
@@ -204,16 +237,25 @@ export class SecurityManager {
       // Delete the existing file
       await deleteFileIfExists(csrExtensionsPath);
 
-      // create the string
-      this._csrExtensions = [
-        'subjectAltName = @alt_names',
-        '',
-        '[alt_names]',
-        'DNS.1 = localhost',
-        'IP.1 = 127.0.0.1',
-        `IP.2 = ${this.internalIp}`,
-        `IP.3 = ${this.publicIp}`,
-      ].join('\n');
+      const csrExtensions: string[] = [];
+
+      csrExtensions.push('subjectAltName = @alt_names');
+      csrExtensions.push('');
+      csrExtensions.push('[alt_names]');
+      csrExtensions.push('DNS.1 = localhost');
+      csrExtensions.push('IP.1 = 127.0.0.1');
+      csrExtensions.push(`IP.2 = ${this.internalIp}`);
+      csrExtensions.push(`IP.3 = ${this.publicIp}`);
+
+      let ipId = 4;
+      this.localIps.forEach((ip) => {
+        csrExtensions.push(`IP.${ipId} = ${ip}`);
+        ipId += 1;
+      });
+
+      this._csrExtensions = csrExtensions.join('\n');
+
+      console.log(this._csrExtensions);
 
       // Write the extensions to disk
       fs.writeFileSync(csrExtensionsPath, this._csrExtensions, 'ascii');
@@ -281,7 +323,7 @@ export class SecurityManager {
         '-days 365',
         '-CAcreateserial',
         '-CAserial serial',
-        `-extfile "${path.relative(process.cwd(), csrExtensionsPath)}`,
+        `-extfile "${path.relative(process.cwd(), csrExtensionsPath)}"`,
       ].join(' '));
 
       // load in the new key
@@ -297,9 +339,17 @@ export class SecurityManager {
    * Create all new keys for this machine
    */
   public generateKeys = async (): Promise<boolean> => {
-    // Detect the local IP address
+    // Detect the internal IP address of the internet facing adapter
     if (!(await this.detectInternalIpAddress())) return false;
     this.log.info(`Internal IP address: ${this.internalIp}`);
+
+    // Detect additional local IP addresses
+    if (!(await this.detectLocalIpAddresses())) return false;
+    if (this._localIps) {
+      this._localIps.forEach((ip) => {
+        this.log.info(`Local IP address: ${ip}`);
+      });
+    };
 
     // Detect the Public IP address
     if (!(await this.detectPublicIpAddress())) return false;
@@ -413,5 +463,12 @@ export class SecurityManager {
    */
   get publicIp(): null | string {
     return this._publicIp;
+  }
+
+  /**
+   * The additional detected local IP addresses of the non internal facing network adapter
+   */
+  get localIps(): string[] {
+    return this._localIps;
   }
 }

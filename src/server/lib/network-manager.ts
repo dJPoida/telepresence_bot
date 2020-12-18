@@ -240,7 +240,7 @@ export class NetworkManager extends TypedEventEmitter<NetworkManagerEventMap> {
   });
 
   /**
-   * Detect the local IP address of the internet facing adapter
+   * Detect the internal IP address of the internet facing adapter
    */
   public detectInternalIpAddress = async (): Promise<boolean> => {
     try {
