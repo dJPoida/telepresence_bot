@@ -18,10 +18,15 @@ export function applyExpressMiddleware(
   expressApp.use(express.json());
   expressApp.use(express.urlencoded({ extended: false }));
 
-  const { sendFile, exists, serveStaticMiddlewareFactory } = configureEnvironment(expressApp);
+  const { sendFile, serveStaticMiddlewareFactory } = configureEnvironment(expressApp);
+
+  // Workaround for peerjs dev map
+  expressApp.use('/peerjs.js.map', (req, res) => {
+    sendFile(res, resolve(__dirname, env.DIST_PATH, 'client/js/peerjs.js.map'));
+  });
 
   // Serve the client static assets
-  expressApp.use('/js/:filename', (req, res, next) => {
+  expressApp.use('/js/:filename', (req, res) => {
     const { filename } = req.params;
     sendFile(res, resolve(__dirname, env.DIST_PATH, `client/js/${filename}`));
   });

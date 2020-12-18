@@ -111,6 +111,11 @@ module.exports = wpMerge.merge(baseConfig, {
           to: 'js/peerjs.development.js',
           toType: 'file',
         },
+        {
+          from: path.resolve(__dirname, 'node_modules/peerjs/dist', 'peerjs.js.map'),
+          to: 'js/peerjs.js.map',
+          toType: 'file',
+        },
       ],
     }),
   ],

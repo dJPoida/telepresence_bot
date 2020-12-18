@@ -22,5 +22,16 @@
     justify-content: flex-start;
     align-items: center;
     cursor: pointer;
+
+    &.separator {
+      height: 1px;
+      padding: 0;
+      margin: calc(var(--universal-padding) / 2) 0;
+      background-color: $border-color;
+
+      &+.separator {
+        display: none;
+      }
+    }
   }
 }

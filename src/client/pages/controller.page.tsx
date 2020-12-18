@@ -11,15 +11,15 @@ import { ErrorBoundary } from '../components/error-boundary';
 export const ControllerPage: React.FC = () => (
   <ErrorBoundary>
     <LocalSettingsProvider>
-      <WebRTCProvider clientType={WEBRTC_CLIENT_TYPE.CALLER}>
-        <SocketProvider>
-          <TelemetryProvider>
+      <SocketProvider>
+        <TelemetryProvider>
+          <WebRTCProvider clientType={WEBRTC_CLIENT_TYPE.CALLER}>
             <IosScrollFix>
               <ControllerInterface />
             </IosScrollFix>
-          </TelemetryProvider>
-        </SocketProvider>
-      </WebRTCProvider>
+          </WebRTCProvider>
+        </TelemetryProvider>
+      </SocketProvider>
     </LocalSettingsProvider>
   </ErrorBoundary>
 );

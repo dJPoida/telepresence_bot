@@ -2,6 +2,7 @@ $active-darken-amount: 15%;
 
 .btn {
   --btn-background: #{$primary-color};
+  --btn-foreground: #{$background-color};
 
   display: flex;
   justify-content: center;
@@ -11,6 +12,7 @@ $active-darken-amount: 15%;
   border-radius: var(--border-radius);
   cursor: pointer;
   background-color: var(--btn-background);
+  color: var(--btn-foreground);
 
   &.square {
     width: 2em;
@@ -19,10 +21,12 @@ $active-darken-amount: 15%;
 
   &.transparent {
     --btn-background: rgba(0, 0, 0, 0);
+    --btn-foreground: #{$border-color};
 
     &.active,
     &:active {
       --btn-background: #{darken($primary-color, $active-darken-amount) };
+      --btn-foreground: #{$white};
     }
   }
 
@@ -32,6 +36,7 @@ $active-darken-amount: 15%;
     &.active,
     &:active {
       --btn-background: #{darken($primary-color, $active-darken-amount) };
+      --btn-foreground: #{$white};
     }
   }
 
@@ -41,6 +46,7 @@ $active-darken-amount: 15%;
     &.active,
     &:active {
       --btn-background: #{darken($success-color, $active-darken-amount) };
+      --btn-foreground: #{$white};
     }
   }
 
@@ -50,10 +56,7 @@ $active-darken-amount: 15%;
     &.active,
     &:active {
       --btn-background: #{darken($danger-color, $active-darken-amount) };
+      --btn-foreground: #{$white};
     }
-  }
-
-  &.active {
-
   }
 }

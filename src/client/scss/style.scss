@@ -63,8 +63,15 @@ body {
   pointer-events: none;
 }
 
+p + hr {
+  margin-top: 0;
+}
+
 hr {
-  border-color: $border-color;
+  width: 100%;
+  height: 1px;
+  border: none;
+  background-color: $border-color;
 }
 
 i + span,

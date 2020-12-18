@@ -368,7 +368,6 @@ export class Joystick extends React.Component<JoystickProps, JoystickState> {
         this.doUpdate();
 
         // Setup the interval
-        console.log('Start Updating');
         this.updateInterval = setInterval(() => {
           this.doUpdate();
         }, this.repeatRate);

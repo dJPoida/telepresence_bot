@@ -11,15 +11,15 @@ import { WebRTCProvider } from '../providers/webrtc.provider';
 export const DisplayPage:React.FC = () => (
   <ErrorBoundary>
     <LocalSettingsProvider>
-      <WebRTCProvider clientType={WEBRTC_CLIENT_TYPE.RECEIVER}>
-        <SocketProvider>
-          <TelemetryProvider>
+      <SocketProvider>
+        <TelemetryProvider>
+          <WebRTCProvider clientType={WEBRTC_CLIENT_TYPE.RECEIVER}>
             <IosScrollFix>
               <DisplayInterface />
             </IosScrollFix>
-          </TelemetryProvider>
-        </SocketProvider>
-      </WebRTCProvider>
+          </WebRTCProvider>
+        </TelemetryProvider>
+      </SocketProvider>
     </LocalSettingsProvider>
   </ErrorBoundary>
 );

@@ -65,6 +65,10 @@ declare global {
       once(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]>): any;
 
+      on(event: SOCKET_SERVER_MESSAGE['NETWORK_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]>): any;
+      once(event: SOCKET_SERVER_MESSAGE['NETWORK_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]>): any;
+      addEventListener(event: SOCKET_SERVER_MESSAGE['NETWORK_STATUS'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]>): any;
+
       on(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
       once(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
       addEventListener(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], listener: Listener<SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]>): any;
@@ -92,6 +96,7 @@ declare global {
       emit(event: SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DRIVE_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['PAN_TILT_INPUT_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['POWER_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['POWER_STATUS']]): any;
+      emit(event: SOCKET_SERVER_MESSAGE['NETWORK_STATUS'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]): any;
       emit(event: SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN'], payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['EVENT_SHUT_DOWN']]): any;
 
       // CLIENT -> SERVER

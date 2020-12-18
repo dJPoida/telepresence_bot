@@ -22,6 +22,7 @@ import { GPIODriver } from './gpio-driver';
 import { VideoManager } from './video-manager';
 import { SecurityManager } from './security-manager';
 import { NetworkManager } from './network-manager';
+import { NetworkManagerEventMap, NETWORK_MANAGER_EVENT } from '../const/network-manager-event.const';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -96,6 +97,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       drive: this.inputManager.drive,
       panTilt: this.inputManager.panTilt,
       power: this.powerMonitor.power,
+      network: this.networkManager.networkStatus,
     };
   }
 
@@ -282,6 +284,10 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     // Listen for Power Monitor Events
     this.powerMonitor
       .on(POWER_MONITOR_EVENT.UPDATE, (payload) => setImmediate(() => this.handlePowerMonitorUpdate(payload)));
+
+    // Listen for Network Manager Events
+    this.networkManager
+      .on(NETWORK_MANAGER_EVENT.UPDATED, (payload) => setImmediate(() => this.handleNetworkStatusUpdated(payload)));
   }
 
   /**
@@ -312,7 +318,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handleClientConnected({ socket }: SocketServerEventMap[SOCKET_SERVER_EVENT['CLIENT_CONNECTED']]) {
     // Send an update directly to the socket with the status of the bot
-    socketServer.sendBotStatusToClients(this.botStatusDto, socket);
+    setTimeout(() => socketServer.sendBotStatusToClients(this.botStatusDto, socket), 200);
   }
 
   /**
@@ -343,5 +349,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handlePowerMonitorUpdate(power: PowerMonitorEventMap[POWER_MONITOR_EVENT['UPDATE']]) {
     socketServer.sendPowerUtilisationStatsToClients({ power });
+  }
+
+  /**
+   * Fired when the network status updates
+   */
+  private handleNetworkStatusUpdated(network: NetworkManagerEventMap[NETWORK_MANAGER_EVENT['UPDATED']]) {
+    socketServer.sendNetworkStatusToClients({ network });
   }
 }

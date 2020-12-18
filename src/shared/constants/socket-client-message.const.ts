@@ -20,10 +20,19 @@ export type A_SOCKET_CLIENT_MESSAGE = SOCKET_CLIENT_MESSAGE[keyof SOCKET_CLIENT_
 
 /**
  * @description
- * Payload map from the Socket Client messages
+ * Message Type map from the Socket Client messages
  */
 export interface ClientSocketMessageMap {
   [SOCKET_CLIENT_MESSAGE.AUTH]: { key: string };
-  [SOCKET_CLIENT_MESSAGE.SET_PEER_ID]: { clientType: A_WEBRTC_CLIENT_TYPE, peerId: string };
+  [SOCKET_CLIENT_MESSAGE.SET_PEER_ID]: { clientType: A_WEBRTC_CLIENT_TYPE, peerId: string | null };
   [SOCKET_CLIENT_MESSAGE.COMMAND]: ClientCommandPayload;
 }
+
+/**
+ * @description
+ * Payload map from the Socket Client messages
+ */
+export type ClientSocketMessagePayload =
+| { type: SOCKET_CLIENT_MESSAGE['AUTH'], payload: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['AUTH']] }
+| { type: SOCKET_CLIENT_MESSAGE['SET_PEER_ID'], payload: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['SET_PEER_ID']] }
+| { type: SOCKET_CLIENT_MESSAGE['COMMAND'], payload: ClientSocketMessageMap[SOCKET_CLIENT_MESSAGE['COMMAND']] }

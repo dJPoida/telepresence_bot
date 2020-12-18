@@ -247,6 +247,21 @@ class SocketServer extends TypedEventEmitter<SocketServerEventMap> {
       this.io.emit(SOCKET_SERVER_MESSAGE.POWER_STATUS, payload);
     }
   }
+
+  /**
+   * Send a network status update to a specific socket or to everyone
+   */
+  sendNetworkStatusToClients(payload: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']], socket?: SocketIO.Socket) {
+    // Emit to a specific socket
+    if (socket) {
+      socket.emit(SOCKET_SERVER_MESSAGE.NETWORK_STATUS, payload);
+    }
+
+    // Emit to everyone
+    else {
+      this.io.emit(SOCKET_SERVER_MESSAGE.NETWORK_STATUS, payload);
+    }
+  }
 }
 
 export const socketServer = SocketServer.getInstance();

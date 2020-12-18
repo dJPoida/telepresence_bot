@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { CLIENT_COMMAND } from '../../shared/constants/client-command.const';
 import { SOCKET_SERVER_MESSAGE, SocketServerMessageMap } from '../../shared/constants/socket-server-message.const';
+import { NetworkStatusDto } from '../../shared/types/network-status.dto.type';
 import { Power } from '../../shared/types/power.type';
 import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 import { SocketContext } from './socket.provider';
@@ -10,6 +11,8 @@ type TelemetryContext = {
   power: Power,
   driveInput: XYCoordinate,
   panTiltInput: XYCoordinate,
+  network: NetworkStatusDto,
+  isLocalConnection: boolean,
 
   setDriveInput: (value: XYCoordinate) => unknown,
   setPanTiltInput: (value: XYCoordinate) => unknown,
@@ -24,6 +27,11 @@ export const TelemetryContext = createContext<TelemetryContext>(null as never);
 export const TelemetryProvider: React.FC = function TelemetryProvider({ children }) {
   const [initialised, setInitialised] = useState(false);
   const [power, setPower] = useState<TelemetryContext['power']>({ current: null, voltage: null, battery: null });
+  const [isLocalConnection, setIsLocalConnection] = useState<boolean>(true);
+  const [network, setNetwork] = useState<TelemetryContext['network']>({
+    internal: { address: null, httpsPort: null, webrtcPort: null },
+    public: { address: null, httpsPort: null, webrtcPort: null },
+  });
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
 
@@ -50,6 +58,7 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       setPower(botStatus.power);
       setDriveInput(botStatus.drive);
       setPanTiltInput(botStatus.panTilt);
+      setNetwork(botStatus.network);
     };
 
     // Respond to a drive input status update
@@ -67,6 +76,14 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       setPower(newPower);
     };
 
+    // Respond to a network status update
+    const handleNetworkStatusUpdate = ({ network: newNetwork }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['NETWORK_STATUS']]) => {
+      setNetwork(newNetwork);
+    };
+
+    // TODO: currently there's a point where the bot status update may be missed while the bot is connecting
+    //       a work around is in the kernel that employs a small timeout to account for the useEffect to catch up
+    //       but that isn't ideal.
     if (!connected) {
       console.warn('No connection: resetting inputs.');
       resetInputs();
@@ -77,7 +94,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .on(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .on(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
+        .on(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate)
+        .on(SOCKET_SERVER_MESSAGE.NETWORK_STATUS, handleNetworkStatusUpdate);
     }
 
     return () => {
@@ -85,7 +103,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
       ws.off(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.DRIVE_INPUT_STATUS, handleDriveInputStatusUpdate)
         .off(SOCKET_SERVER_MESSAGE.PAN_TILT_INPUT_STATUS, handlePanTiltInputStatusUpdate)
-        .off(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate);
+        .off(SOCKET_SERVER_MESSAGE.POWER_STATUS, handlePowerStatusUpdate)
+        .off(SOCKET_SERVER_MESSAGE.NETWORK_STATUS, handleNetworkStatusUpdate);
     };
   }, [ws, connected, resetInputs]);
 
@@ -109,12 +128,24 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
     }
   }, [setDriveInput, sendCommand, panTiltInput.x, panTiltInput.y]);
 
+  /**
+   * Whenever the network value is changed, determine if this client is being used locally or remotely
+   */
+  useEffect(() => {
+    setIsLocalConnection(network.internal.address === window.location.hostname);
+  }, [network]);
+
+  /**
+   * Render
+   */
   return (
     <TelemetryContext.Provider value={{
       initialised,
       power,
       driveInput,
       panTiltInput,
+      network,
+      isLocalConnection,
       setDriveInput: doSetDriveInput,
       setPanTiltInput: doSetPanTiltInput,
     }}

@@ -6,11 +6,15 @@ import { Icon } from './icon';
 import { XYCoordinate } from '../../shared/types/xy-coordinate.type';
 
 export type MenuItem = {
+  separator?: undefined,
   key: string,
   label: string,
   icon?: AN_ICON,
   className?: string,
   onClick?: () => unknown,
+} | {
+  separator: true,
+  key: string,
 }
 
 export type DropDownMenuProps = {
@@ -67,20 +71,32 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
             }}
           >
             {items.map((item) => (
-            // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
-              <div
+              <React.Fragment
                 key={item.key}
-                className={classNames('drop-down-menu-item', item.className)}
-                onClick={() => {
-                  if (item.onClick) { item.onClick(); }
-                  if (onCloseRequest) { onCloseRequest(); }
-                }}
               >
-                {item.icon && (
-                <Icon icon={item.icon} />
+                {item.separator && (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    className="drop-down-menu-item separator"
+                  />
                 )}
-                <span>{item.label}</span>
-              </div>
+
+                {!item.separator && (
+                  // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+                  <div
+                    className={classNames('drop-down-menu-item', item.className)}
+                    onClick={() => {
+                      if (item.onClick) { item.onClick(); }
+                      if (onCloseRequest) { onCloseRequest(); }
+                    }}
+                  >
+                    {item.icon && (
+                    <Icon icon={item.icon} />
+                    )}
+                    <span>{item.label}</span>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
 
           </div>

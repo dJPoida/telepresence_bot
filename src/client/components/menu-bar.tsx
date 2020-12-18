@@ -1,4 +1,4 @@
-import React, { createRef, useContext, useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { Button } from './button';
 import { Icon } from './icon';
@@ -8,8 +8,7 @@ import { StatusIndicator } from './status-indicator';
 import { SettingsModal } from './modals/settings.modal';
 import { TelemetryContext } from '../providers/telemetry.provider';
 import { DropDownMenu } from './drop-down-menu';
-import { LinksModal } from './modals/links.modal';
-import { SecurityModal } from './modals/security.modal';
+import { NetworkModal } from './modals/network.modal';
 import { AN_APP_MODE, APP_MODE } from '../const/app-mode.constant';
 
 export type MenuBarProps = {
@@ -23,10 +22,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
-  const [isLinksModalVisible, setLinksModalVisible] = useState(false);
-  const [isSecurityModalVisible, setSecurityModalVisible] = useState(false);
+  const [isNetworkModalVisible, setNetworkModalVisible] = useState(false);
   const { connected, latency } = useContext(SocketContext);
-  const { power: { battery } } = useContext(TelemetryContext);
+  const { power: { battery }, isLocalConnection } = useContext(TelemetryContext);
   const displayBattery = battery ? `${battery}%` : '??%';
   const iconValue = battery ? Math.round(battery / 20) : 0;
 
@@ -52,20 +50,48 @@ export const MenuBar: React.FC<MenuBarProps> = ({
             {
               key: 'settings',
               icon: ICON.SETTINGS,
-              label: 'Settings',
+              label: 'Local Settings',
               onClick: () => { setSettingsModalVisible(!isSettingsModalVisible); },
             },
             {
-              key: 'links',
-              icon: ICON.EXTERNAL_LINK,
-              label: 'Links',
-              onClick: () => { setLinksModalVisible(!isLinksModalVisible); },
+              key: 'network',
+              icon: ICON.LOCK,
+              label: 'Network',
+              onClick: () => { setNetworkModalVisible(!isNetworkModalVisible); },
             },
             {
-              key: 'security',
-              icon: ICON.LOCK,
-              label: 'Security',
-              onClick: () => { setSecurityModalVisible(!isSecurityModalVisible); },
+              key: 's1',
+              separator: true,
+            },
+            // Only display the link to the display mode if this is a local connection
+            ...((appMode !== APP_MODE.DISPLAY && isLocalConnection) ? [{
+              key: 'display',
+              icon: ICON.TELEPRESENCE_BOT,
+              label: 'Bot Display',
+              onClick: () => { window.location.pathname = '/display'; },
+            }] : []),
+            ...(appMode !== APP_MODE.CONTROLLER ? [{
+              key: 'control',
+              icon: ICON.GAMEPAD,
+              label: 'Bot Control',
+              onClick: () => { window.location.pathname = '/'; },
+            }] : []),
+            // Only display the link to the config page if this is a local connection
+            ...((appMode !== APP_MODE.CONFIG && isLocalConnection) ? [{
+              key: 'config',
+              icon: ICON.SETTINGS,
+              label: 'Bot Config',
+              onClick: () => { window.location.pathname = '/config'; },
+            }] : []),
+            {
+              key: 's2',
+              separator: true,
+            },
+            {
+              key: 'reload',
+              icon: ICON.REFRESH,
+              label: 'Reload',
+              onClick: () => { window.location.reload(); },
             },
           ]}
         />
@@ -118,17 +144,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           appMode={appMode}
         />
       )}
-      {isLinksModalVisible && (
-        <LinksModal
-          visible={isLinksModalVisible}
-          onCloseRequest={() => setLinksModalVisible(false)}
-          appMode={appMode}
-        />
-      )}
-      {isSecurityModalVisible && (
-        <SecurityModal
-          visible={isSecurityModalVisible}
-          onCloseRequest={() => setSecurityModalVisible(false)}
+      {isNetworkModalVisible && (
+        <NetworkModal
+          visible={isNetworkModalVisible}
+          onCloseRequest={() => setNetworkModalVisible(false)}
           appMode={appMode}
         />
       )}

@@ -62,11 +62,35 @@ export const VideoContainer: React.FC<VideoContainerProps> = () => {
 
       <div className="overlay-wrapper">
         {/* Capture devices could not be initialised */}
-        { (webRTCState === WEBRTC_STATE.ERROR) && (
+        { (webRTCState === WEBRTC_STATE.DEVICE_ERROR) && (
           <div className="message error">
             <span>{webRTCMessage}</span>
             <Button
-              onClick={devicesAvailable ? callHost : authoriseMediaCapture}
+              onClick={authoriseMediaCapture}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Peer connection has failed for some reason */}
+        { (webRTCState === WEBRTC_STATE.PEER_ERROR) && (
+          <div className="message error">
+            <span>{webRTCMessage}</span>
+            <Button
+              onClick={reconnectPeer}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* WEBRTC Call Failed or Disconnected */}
+        { (webRTCState === WEBRTC_STATE.CALL_ERROR) && (
+          <div className="message error">
+            <span>{webRTCMessage}</span>
+            <Button
+              onClick={callHost}
             >
               Retry
             </Button>
