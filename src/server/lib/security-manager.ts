@@ -323,7 +323,7 @@ export class SecurityManager {
         '-days 365',
         '-CAcreateserial',
         '-CAserial serial',
-        `-extfile "${path.relative(process.cwd(), csrExtensionsPath)}"`,
+        `-extfile \"${path.relative(process.cwd(), csrExtensionsPath)}\"`,
       ].join(' '));
 
       // load in the new key
