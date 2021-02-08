@@ -31,6 +31,8 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
   const [network, setNetwork] = useState<TelemetryContext['network']>({
     internal: { address: null, httpsPort: null, webrtcPort: null },
     public: { address: null, httpsPort: null, webrtcPort: null },
+    stunServer: { urls: null },
+    turnServer: { urls: null, username: null, credential: null },
   });
   const [driveInput, setDriveInput] = useState<TelemetryContext['driveInput']>({ x: 0, y: 0 });
   const [panTiltInput, setPanTiltInput] = useState<TelemetryContext['panTiltInput']>({ x: 0, y: 0 });
@@ -124,9 +126,9 @@ export const TelemetryProvider: React.FC = function TelemetryProvider({ children
   const doSetPanTiltInput = useCallback((panTilt: XYCoordinate) => {
     if (panTiltInput.x !== panTilt.x || panTiltInput.y !== panTilt.y) {
       sendCommand({ type: CLIENT_COMMAND.SET_PAN_TILT_INPUT, payload: { panTilt } });
-      setDriveInput(panTilt);
+      setPanTiltInput(panTilt);
     }
-  }, [setDriveInput, sendCommand, panTiltInput.x, panTiltInput.y]);
+  }, [setPanTiltInput, sendCommand, panTiltInput.x, panTiltInput.y]);
 
   /**
    * Whenever the network value is changed, determine if this client is being used locally or remotely

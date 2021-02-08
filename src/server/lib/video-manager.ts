@@ -9,6 +9,7 @@ import { socketServer } from './socket-server';
 import { CLIENT_COMMAND } from '../../shared/constants/client-command.const';
 import { SocketServerEventMap, SOCKET_SERVER_EVENT } from '../const/socket-server-event.const';
 import { A_WEBRTC_CLIENT_TYPE, WEBRTC_CLIENT_TYPE } from '../../client/const/webrtc-client-type.constant';
+import { WebRTCStatusDto } from '../../shared/types/webrtc-status.dto.type';
 
 /**
  * @class VideoManager
@@ -194,5 +195,15 @@ export class VideoManager extends TypedEventEmitter<VideoManagerEventMap> {
    */
   public get displayPeerId(): null | string {
     return this._displayPeerId;
+  }
+
+  /**
+   * The DTO for the current webRTC status
+   */
+  public get webRTCStatus(): WebRTCStatusDto {
+    return {
+      controllerPeerId: this.controllerPeerId,
+      displayPeerId: this.displayPeerId,
+    };
   }
 }

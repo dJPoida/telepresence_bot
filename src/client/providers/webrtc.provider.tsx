@@ -8,6 +8,7 @@ import { TelemetryContext } from './telemetry.provider';
 import { CLIENT_COMMAND } from '../../shared/constants/client-command.const';
 import { SocketServerMessageMap, SOCKET_SERVER_MESSAGE } from '../../shared/constants/socket-server-message.const';
 import { LocalSettingsContext } from './local-settings.provider';
+import { BotStatusDto } from '../../shared/types/bot-status.dto.type';
 
 type WebRTCContext = {
   webRTCState: A_WEBRTC_STATE,
@@ -22,6 +23,7 @@ type WebRTCContext = {
   reconnectPeer: () => void,
   callHost: () => void,
   endCall: () => void,
+  ignoreDeviceError: () => void,
 };
 
 export const WebRTCContext = createContext<WebRTCContext>(null as never);
@@ -111,6 +113,14 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
         remoteStream.current = stream;
         setWebRTCState(WEBRTC_STATE.CONNECTED);
       });
+
+      // When the call is disconnected
+      mediaConnection.on('close', () => {
+        console.log('Remote stream disconnected');
+        // for the moment the easiest thing to do is reload the page
+        // TODO: handle this more gracefully
+        window.location.reload();
+      })
     }
   }, []);
 
@@ -119,15 +129,39 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
    */
   const createPeer = useCallback(() => {
     console.log(`Creating peer as "${clientType}"`);
+
+    const iceServers: RTCIceServer[] = [];
+
+    // if (network.stunServer.urls) {
+    //   iceServers.push({
+    //     urls: network.stunServer.urls,
+    //   })
+    // }
+
+    if (network.turnServer.urls) {
+      iceServers.push({
+        urls: network.turnServer.urls,
+        ...(network.turnServer.username ?
+          {
+            username: network.turnServer.username,
+          } : {}
+        ),
+        ...(network.turnServer.credential ?
+          {
+            credential: network.turnServer.credential,
+            credentialType: 'password',
+          } : {}
+        ),
+      })
+    }
+
     setPeer(new Peer({
       host: window.location.hostname,
       port: (isLocalConnection ? network.internal.webrtcPort : network.public.webrtcPort) ?? undefined,
       path: '/',
       config: {
         peerIdentity: clientType,
-        iceServers: [
-          { urls: 'stun:stun1.l.google.com:19302' },
-        ],
+        iceServers,
       },
     }));
     // TODO: handle socket disconnection
@@ -257,12 +291,17 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       const handleDisplayPeerIdChanged = ({ peerId: newPeerId }: SocketServerMessageMap[SOCKET_SERVER_MESSAGE['DISPLAY_PEER_ID_CHANGED']]) => {
         setRemotePeerId(newPeerId);
       };
+      const handleBotStatusUpdate = (botStatus: BotStatusDto) => {
+        handleDisplayPeerIdChanged({peerId: botStatus.webRTC.displayPeerId});
+      }
       if (ws) {
         ws.on(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, handleDisplayPeerIdChanged);
+        ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate);
       }
       return () => {
         if (ws) {
           ws.off(SOCKET_SERVER_MESSAGE.DISPLAY_PEER_ID_CHANGED, handleDisplayPeerIdChanged);
+          ws.off(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate);
         }
       };
     }
@@ -276,12 +315,17 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
         window.location.reload();
       }
     };
+    const handleBotStatusUpdate = (botStatus: BotStatusDto) => {
+      handleControllerPeerIdChanged({peerId: botStatus.webRTC.controllerPeerId});
+    }
     if (ws) {
       ws.on(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, handleControllerPeerIdChanged);
+      ws.on(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate);
     }
     return () => {
       if (ws) {
         ws.off(SOCKET_SERVER_MESSAGE.CONTROLLER_PEER_ID_CHANGED, handleControllerPeerIdChanged);
+        ws.off(SOCKET_SERVER_MESSAGE.BOT_STATUS, handleBotStatusUpdate);
       }
     };
   }, [clientType, peerId, remotePeerId, ws]);
@@ -294,16 +338,22 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       console.log('Calling the receiver...');
       setWebRTCState(WEBRTC_STATE.CALLING);
       // Connect to the inverse ID depending on this instance clientType
-      const newCall = peer.call(remotePeerId, localStream.current);
-      newCall.on('stream', (stream) => {
-        remoteStream.current = stream;
-        setWebRTCState(WEBRTC_STATE.CONNECTED);
-      });
-      newCall.on('close', () => {
-        setWebRTCState(WEBRTC_STATE.READY);
-        setCall(null);
-      });
-      setCall(newCall);
+      try {
+        const newCall = peer.call(remotePeerId, localStream.current);
+        newCall.on('stream', (stream) => {
+          remoteStream.current = stream;
+          setWebRTCState(WEBRTC_STATE.CONNECTED);
+        });
+        newCall.on('close', () => {
+          setWebRTCState(WEBRTC_STATE.READY);
+          setCall(null);
+        });
+        setCall(newCall);
+      } catch (err) {
+        console.error('doCallHost()', err);
+        setWebRTCState(WEBRTC_STATE.DEVICE_ERROR);
+        setWebRTCMessage('WebRTC Error!');
+      }
     } else if (!peer) {
       console.error('Cannot start a call if the peer is not connected.');
       setWebRTCState(WEBRTC_STATE.DEVICE_ERROR);
@@ -368,6 +418,16 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
   }, [createPeer, peer, webRTCState]);
 
   /**
+   * Terminate the connection attempt or call in progress
+   */
+  const doIgnoreDeviceError = useCallback(() => {
+    if (isLocalConnection) {
+      console.log('Ignoring device error - Web RTC will not be available.');
+      setWebRTCState(WEBRTC_STATE.NOT_AVAILABLE);
+    }
+  }, [call]);
+
+  /**
    * Set the mic to muted
    */
   useEffect(() => {
@@ -395,6 +455,7 @@ export const WebRTCProvider: React.FC<WebRTCProviderProps> = function WebRTCProv
       reconnectPeer: doReconnectPeer,
       callHost: doCallHost,
       endCall: doEndCall,
+      ignoreDeviceError: doIgnoreDeviceError,
     }}
     >
       {children}

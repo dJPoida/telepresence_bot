@@ -25,6 +25,7 @@ import { NetworkManager } from './network-manager';
 import { NetworkManagerEventMap, NETWORK_MANAGER_EVENT } from '../const/network-manager-event.const';
 import { VIDEO_MANAGER_EVENT } from '../const/video-manager-event.const';
 import { A_WEBRTC_CLIENT_TYPE, WEBRTC_CLIENT_TYPE } from '../../client/const/webrtc-client-type.constant';
+import { ServoDriver } from './servo-driver';
 
 export class Kernel extends TypedEventEmitter<KernelEventMap> {
   protected readonly log = classLoggerFactory(this);
@@ -40,6 +41,8 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
   public readonly gpioDriver: GPIODriver;
 
   public readonly ledStripDriver: LEDStripDriver;
+
+  public readonly servoDriver: ServoDriver;
 
   public readonly motorDriver: MotorDriver;
 
@@ -82,6 +85,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
     this.inputManager = new InputManager();
     this.ledStripDriver = new LEDStripDriver();
     this.motorDriver = new MotorDriver();
+    this.servoDriver = new ServoDriver();
     this.speakerDriver = new SpeakerDriver();
     this.powerMonitor = new PowerMonitor();
     this.videoManager = new VideoManager();
@@ -100,6 +104,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       panTilt: this.inputManager.panTilt,
       power: this.powerMonitor.power,
       network: this.networkManager.networkStatus,
+      webRTC: this.videoManager.webRTCStatus,
     };
   }
 
@@ -144,6 +149,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
       this.inputManager.initialise(),
       this.ledStripDriver.initialise(),
       this.motorDriver.initialise(this.i2cDriver.i2cBus, this.gpioDriver.pigpio),
+      this.servoDriver.initialise(this.i2cDriver.i2cBus),
       this.networkManager.initialise(),
     ]).then(() => {
       this.bindEvents();
@@ -184,6 +190,12 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
         await this.networkManager.shutDown();
       } catch (error) {
         this.log.error(`Error while shutting down the Network Manager: ${error}`);
+      }
+
+      try {
+        await this.servoDriver.shutDown();
+      } catch (error) {
+        this.log.error(`Error while shutting down Servo Driver: ${error}`);
       }
 
       try {
@@ -351,6 +363,7 @@ export class Kernel extends TypedEventEmitter<KernelEventMap> {
    */
   private handlePanTiltInputChanged({ panTilt }: InputManagerEventMap[INPUT_MANAGER_EVENT['PAN_TILT_INPUT_CHANGE']]) {
     socketServer.sendPanTiltInputStatusToClients({ panTilt });
+    this.servoDriver.setPanTiltInput(panTilt);
   }
 
   /**

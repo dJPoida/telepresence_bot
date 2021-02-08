@@ -10,6 +10,7 @@ import { ConfirmationModal } from './modals/confirmation.modal';
 import { AN_APP_MODE, APP_MODE } from '../const/app-mode.constant';
 import { LocalSettingsContext } from '../providers/local-settings.provider';
 import { Button } from './button';
+import { TelemetryContext } from '../providers/telemetry.provider';
 
 export type VideoContainerProps = {
   appMode: AN_APP_MODE,
@@ -29,7 +30,12 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
     callHost,
     endCall,
     reconnectPeer,
+    ignoreDeviceError,
   } = useContext(WebRTCContext);
+
+  const {
+    isLocalConnection,
+  } = useContext(TelemetryContext);
 
   const {
     setMicMuted,
@@ -131,11 +137,20 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
         { (webRTCState === WEBRTC_STATE.DEVICE_ERROR) && (
           <div className="message error">
             <span>{webRTCMessage}</span>
-            <Button
-              onClick={authoriseMediaCapture}
-            >
-              Retry
-            </Button>
+            <div className="button-row">
+              <Button
+                onClick={authoriseMediaCapture}
+              >
+                Retry
+              </Button>
+              {isLocalConnection && (
+                <Button
+                  onClick={ignoreDeviceError}
+                >
+                  Ignore
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

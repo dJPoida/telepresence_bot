@@ -280,6 +280,14 @@ export class NetworkManager extends TypedEventEmitter<NetworkManagerEventMap> {
         httpsPort: env.HTTPS_PORT,
         webrtcPort: env.WEB_RTC_PORT,
       },
+      stunServer: {
+        urls: env.STUN_SERVER ? `stun:${env.STUN_SERVER}` : null,
+      },
+      turnServer: {
+        urls: env.TURN_SERVER ? `turn:${env.TURN_SERVER}` : null,
+        username: env.TURN_SERVER_USERNAME ?? null,
+        credential: env.TURN_SERVER_PASSWORD ?? null,
+      }
     };
   }
 

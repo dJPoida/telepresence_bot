@@ -133,14 +133,14 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
       this.pigpio = kernelPigpio;
 
       if (this.i2cBus) {
-        const newPca9685Driver: Error | Pca9685Driver = await asyncPca9685({
-          i2c: this.i2cBus.bus(),
-          address: env.I2C_ADDRESS_PCA9685,
-          frequency: env.MOTOR_PWM_FREQUENCY,
-        });
+        try {
+          const newPca9685Driver: Pca9685Driver = await asyncPca9685({
+            i2c: this.i2cBus.bus(),
+            address: env.I2C_ADDRESS_PCA9685,
+            frequency: env.MOTOR_PWM_FREQUENCY,
+          });
 
-        this.log.info(' - init PCA9685...');
-        if (!(newPca9685Driver instanceof Error)) {
+          this.log.info(' - init PCA9685...');
           this.pca9685 = newPca9685Driver;
 
           // Setup the motor driver Enable Pins
@@ -153,9 +153,9 @@ export class MotorDriver extends TypedEventEmitter<MotorDriverEventMap> {
               wheelConfig.gpioReverse.write(0);
             }
           });
-        } else {
+        } catch (err) {
           // no PCA9685 - hardware not available
-          this.log.error(' - PCA9685: Problem initialising the PCA9685: ', newPca9685Driver);
+          this.log.error(' - PCA9685: Problem initialising the PCA9685: ', err);
         }
       }
     } else {

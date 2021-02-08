@@ -17,7 +17,7 @@ export const ControllerInterface: React.FC = () => {
   const localSettings = useContext(LocalSettingsContext);
   const { webRTCState } = useContext(WebRTCContext);
 
-  const controlsDisabled = !socketConnected || (webRTCState !== WEBRTC_STATE.CONNECTED);
+  const controlsDisabled = !socketConnected || ((webRTCState !== WEBRTC_STATE.CONNECTED) && !telemetry.isLocalConnection);
 
   return (
     <div className={classNames('controller-interface', { enabled: !controlsDisabled })}>

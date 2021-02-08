@@ -88,6 +88,18 @@
         color: $danger-color;
       }
 
+      .button-row {
+        display: flex;
+        justify-content: center;
+
+        button {
+          margin-right: var(--universal-padding);
+          &:last-of-type {
+            margin-right: 0;
+          }
+        }
+      }
+
       button {
         margin-top: var(--universal-padding);
       }
