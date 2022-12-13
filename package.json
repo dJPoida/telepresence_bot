@@ -66,7 +66,7 @@
     "@djpoida/ina219": "../@djpoida/ina219",
     "classnames": "^2.2.6",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "i2c-bus": "^5.2.1",
     "internal-ip": "^6.2.0",
     "mime-types": "^2.1.28",
